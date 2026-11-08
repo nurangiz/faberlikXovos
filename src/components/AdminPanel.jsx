@@ -2,16 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, Video, BarChart3, Plus, Trash2, Edit3, Save, RotateCcw, 
   X, Check, LogOut, ExternalLink, Sparkles, AlertCircle, 
-  CheckCircle2, Play, Search, ShieldCheck, Film, Award, Phone, MapPin, Eye
+  CheckCircle2, Play, Search, ShieldCheck, Film, Award, Phone, MapPin, Eye,
+  ShoppingBag, Tag, Package
 } from 'lucide-react';
 import { 
   getStoredCourses, saveStoredCourses, resetStoredCourses, 
   formatVideoUrl, isPlayableVideo 
 } from '../utils/coursesStorage';
+import { 
+  getStoredProducts, saveStoredProducts, resetStoredProducts 
+} from '../utils/productsStorage';
 import { api } from '../services/api';
 
 export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
-  const [activeTab, setActiveTab] = useState('stats'); // 'stats', 'courses', 'users'
+  const [activeTab, setActiveTab] = useState('stats'); // 'stats', 'courses', 'users', 'products'
   const [courses, setCourses] = useState(() => getStoredCourses());
   const [selectedCourseId, setSelectedCourseId] = useState(courses[0]?.id || 'biznes-boshlash');
   
@@ -22,6 +26,21 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
     totalLessonsCompleted: 0,
     totalCertificates: 0
   });
+
+  // Products state
+  const [products, setProducts] = useState(() => getStoredProducts());
+  const [editingProduct, setEditingProduct] = useState(null); // { isNew, product }
+  const [productForm, setProductForm] = useState({
+    title: '',
+    category: 'Parfyumeriya',
+    code: '',
+    price: '',
+    points: '',
+    desc: '',
+    tag: 'Elita Ifor'
+  });
+  const [productSearch, setProductSearch] = useState('');
+  const [productCatFilter, setProductCatFilter] = useState('all');
 
   // Edit / Add Lesson Modal
   const [editingLesson, setEditingLesson] = useState(null); // { isNew, courseId, lesson }
@@ -266,6 +285,100 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
     showAlert("Yangi o'quvchi muvaffaqiyatli qo'shildi!");
   };
 
+  // Products Handlers
+  const handleAddNewProduct = () => {
+    setEditingProduct({ isNew: true });
+    setProductForm({
+      title: '',
+      category: 'Parfyumeriya',
+      code: Math.floor(1000 + Math.random() * 9000).toString(),
+      price: "150,000 so'm",
+      points: "15.0 ball",
+      desc: '',
+      tag: 'Yangi'
+    });
+  };
+
+  const handleEditProduct = (prod) => {
+    setEditingProduct({ isNew: false, id: prod.id });
+    setProductForm({
+      title: prod.title || '',
+      category: prod.category || 'Parfyumeriya',
+      code: prod.code || '',
+      price: prod.price || '',
+      points: prod.points || '',
+      desc: prod.desc || '',
+      tag: prod.tag || 'Xit Mahsulot'
+    });
+  };
+
+  const handleSaveProduct = (e) => {
+    e.preventDefault();
+    if (!productForm.title.trim()) {
+      alert("Iltimos, mahsulot nomini kiriting!");
+      return;
+    }
+
+    let updatedProducts = [...products];
+    if (editingProduct.isNew) {
+      const newProd = {
+        id: `p_${Date.now()}`,
+        code: productForm.code.trim() || Math.floor(1000 + Math.random() * 9000).toString(),
+        title: productForm.title.trim(),
+        category: productForm.category,
+        price: productForm.price.trim(),
+        points: productForm.points.trim().includes('ball') ? productForm.points.trim() : `${productForm.points.trim()} ball`,
+        desc: productForm.desc.trim(),
+        tag: productForm.tag.trim() || 'Yangi'
+      };
+      updatedProducts.unshift(newProd);
+    } else {
+      updatedProducts = updatedProducts.map(p => {
+        if (p.id !== editingProduct.id) return p;
+        return {
+          ...p,
+          title: productForm.title.trim(),
+          category: productForm.category,
+          code: productForm.code.trim(),
+          price: productForm.price.trim(),
+          points: productForm.points.trim().includes('ball') ? productForm.points.trim() : `${productForm.points.trim()} ball`,
+          desc: productForm.desc.trim(),
+          tag: productForm.tag.trim()
+        };
+      });
+    }
+
+    setProducts(updatedProducts);
+    saveStoredProducts(updatedProducts);
+    setEditingProduct(null);
+    showAlert("Mahsulot muvaffaqiyatli saqlandi va saytda yangilandi!");
+  };
+
+  const handleDeleteProduct = (prodId) => {
+    if (confirm("Haqiqatan ham bu mahsulotni o'chirmoqchimisiz?")) {
+      const updated = products.filter(p => p.id !== prodId);
+      setProducts(updated);
+      saveStoredProducts(updated);
+      showAlert("Mahsulot o'chirildi va saytda yangilandi!");
+    }
+  };
+
+  const handleResetProducts = () => {
+    if (confirm("Barcha mahsulotlarni boshlang'ich holatiga qaytarmoqchimisiz?")) {
+      const def = resetStoredProducts();
+      setProducts(def);
+      showAlert("Mahsulotlar asl holatiga qaytarildi!");
+    }
+  };
+
+  const filteredProducts = products.filter(p => {
+    const matchSearch = (p.title || '').toLowerCase().includes(productSearch.toLowerCase()) ||
+                        (p.code || '').includes(productSearch) ||
+                        (p.desc || '').toLowerCase().includes(productSearch.toLowerCase());
+    const matchCat = productCatFilter === 'all' || p.category === productCatFilter;
+    return matchSearch && matchCat;
+  });
+
   const filteredUsers = users.filter(u => {
     const matchSearch = (u.name || '').toLowerCase().includes(searchUser.toLowerCase()) ||
                         (u.phone || '').includes(searchUser);
@@ -365,6 +478,18 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
           >
             <Users className="w-4 h-4" />
             <span>O'quvchilar Ro'yxati ({users.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('products')}
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition ${
+              activeTab === 'products'
+                ? 'bg-faberlic-700 text-white shadow-md shadow-faberlic-700/20'
+                : 'bg-white text-slate-700 hover:bg-rose-50 border border-slate-200'
+            }`}
+          >
+            <ShoppingBag className="w-4 h-4" />
+            <span>Mahsulotlar & Parfyumeriya ({products.length})</span>
           </button>
         </div>
 
@@ -690,6 +815,128 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
             </div>
           )}
 
+          {/* ===================== TAB 4: MAHSULOTLAR & PARFYUMERIYA ===================== */}
+          {activeTab === 'products' && (
+            <div className="space-y-6 animate-in fade-in">
+              {/* Header Filters & Add button */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Mahsulot nomi, artikul yoki tavsif bo'yicha qidirish..."
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                    />
+                  </div>
+
+                  <select
+                    value={productCatFilter}
+                    onChange={(e) => setProductCatFilter(e.target.value)}
+                    className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                  >
+                    <option value="all">Barcha Kategoriyalar</option>
+                    <option value="Parfyumeriya">Parfyumeriya</option>
+                    <option value="Teri Parvarishi">Teri Parvarishi</option>
+                    <option value="Kosmetologiya">Kosmetologiya</option>
+                    <option value="Uy-Ro'zg'or">Uy-Ro'zg'or</option>
+                    <option value="Salomatlik">Salomatlik</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleResetProducts}
+                    className="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
+                    title="Boshlang'ich holatga qaytarish"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Qaytarish</span>
+                  </button>
+
+                  <button
+                    onClick={handleAddNewProduct}
+                    className="px-4 py-2.5 rounded-xl bg-faberlic-700 hover:bg-faberlic-800 text-white text-xs sm:text-sm font-bold shadow-md shadow-faberlic-700/20 flex items-center justify-center gap-2 transition"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Yangi Mahsulot Qo'shish</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Products Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredProducts.map((prod) => (
+                  <div 
+                    key={prod.id}
+                    className="bg-white rounded-2xl border border-slate-200 hover:border-rose-300 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+                  >
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-rose-100 text-faberlic-800">
+                          {prod.tag || 'Mahsulot'}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-slate-500">
+                          Artikul: #{prod.code}
+                        </span>
+                      </div>
+
+                      <h4 className="font-serif font-black text-slate-900 text-base leading-snug">
+                        {prod.title}
+                      </h4>
+
+                      <div className="inline-block text-[11px] font-bold text-faberlic-700 bg-rose-50 px-2 py-0.5 rounded-md">
+                        {prod.category}
+                      </div>
+
+                      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                        {prod.desc}
+                      </p>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100 space-y-3">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <div>
+                          <span className="text-[10px] text-slate-400 block font-normal">Katalog narxi:</span>
+                          <span className="text-slate-900 font-extrabold">{prod.price}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] text-slate-400 block font-normal">Beradigan balli:</span>
+                          <span className="text-faberlic-700 font-black">+{prod.points}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          onClick={() => handleEditProduct(prod)}
+                          className="flex-1 py-2 rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-700 hover:text-faberlic-700 text-xs font-bold border border-slate-200 hover:border-rose-200 transition flex items-center justify-center gap-1.5"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Tahrirlash</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(prod.id)}
+                          className="p-2 rounded-xl bg-slate-50 hover:bg-rose-100 text-slate-400 hover:text-rose-700 border border-slate-200 transition"
+                          title="O'chirish"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {filteredProducts.length === 0 && (
+                  <div className="col-span-full py-12 text-center text-slate-500 font-medium">
+                    Hech qanday mahsulot topilmadi.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
         </div>
 
       </div>
@@ -920,6 +1167,156 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
                   className="px-6 py-2.5 rounded-xl bg-faberlic-700 text-white text-xs font-bold shadow-md"
                 >
                   O'quvchini Saqlash
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== EDIT / ADD PRODUCT MODAL ===================== */}
+      {editingProduct && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in"
+          onClick={() => setEditingProduct(null)}
+        >
+          <div 
+            className="w-full max-w-xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-rose-100 space-y-5 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-faberlic-700" />
+                <h3 className="font-serif font-black text-xl text-slate-900">
+                  {editingProduct.isNew ? "Yangi Mahsulot Qo'shish" : "Mahsulotni Tahrirlash"}
+                </h3>
+              </div>
+              <button
+                onClick={() => setEditingProduct(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-rose-50 hover:text-faberlic-700 flex items-center justify-center text-slate-500"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProduct} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Mahsulot Nomi:
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={productForm.title}
+                  onChange={(e) => setProductForm({ ...productForm, title: e.target.value })}
+                  placeholder="Masalan: Pour Toujours Parfyum Suvi (50 ml)"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Kategoriya:
+                  </label>
+                  <select
+                    value={productForm.category}
+                    onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                  >
+                    <option value="Parfyumeriya">Parfyumeriya</option>
+                    <option value="Teri Parvarishi">Teri Parvarishi</option>
+                    <option value="Kosmetologiya">Kosmetologiya</option>
+                    <option value="Uy-Ro'zg'or">Uy-Ro'zg'or</option>
+                    <option value="Salomatlik">Salomatlik</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Artikul Kodi (#):
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={productForm.code}
+                    onChange={(e) => setProductForm({ ...productForm, code: e.target.value })}
+                    placeholder="Masalan: 3103"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Katalog Narxi:
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={productForm.price}
+                    onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                    placeholder="245,000 so'm"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Beradigan Balli:
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={productForm.points}
+                    onChange={(e) => setProductForm({ ...productForm, points: e.target.value })}
+                    placeholder="24.0"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Teg / Belgisi:
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.tag}
+                    onChange={(e) => setProductForm({ ...productForm, tag: e.target.value })}
+                    placeholder="Elita Ifor"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Qisqa Tavsif / Ma'lumot:
+                </label>
+                <textarea
+                  rows={3}
+                  value={productForm.desc}
+                  onChange={(e) => setProductForm({ ...productForm, desc: e.target.value })}
+                  placeholder="Mijozlar uchun mahsulot afzalliklari..."
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                ></textarea>
+              </div>
+
+              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 transition"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-faberlic-700 hover:bg-faberlic-800 text-white text-xs sm:text-sm font-bold shadow-md shadow-faberlic-700/20 flex items-center gap-2 transition"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Mahsulotni Saqlash</span>
                 </button>
               </div>
             </form>

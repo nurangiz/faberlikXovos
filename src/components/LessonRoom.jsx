@@ -24,9 +24,22 @@ export default function LessonRoom({
     return () => window.removeEventListener('courses_updated', handleUpdate);
   }, []);
 
-  const currentCourse = courses.find(c => c.id === currentCourseId) || courses[0];
-  const [activeLessonId, setActiveLessonId] = useState(currentCourse.lessons[0]?.id || 'l1-1');
+  const currentCourse = courses.find(c => c.id === currentCourseId) || courses[0] || {
+    id: 'biznes-boshlash',
+    title: '1-Modul: Faberlic Biznes Boshlash',
+    lessons: []
+  };
+  const [activeLessonId, setActiveLessonId] = useState(() => currentCourse.lessons?.[0]?.id || 'l1-1');
   const [activeTab, setActiveTab] = useState('notes'); // 'notes', 'actions', 'quiz', 'resources'
+
+  // Sync active lesson when course changes
+  useEffect(() => {
+    if (currentCourse && currentCourse.lessons && currentCourse.lessons.length > 0) {
+      if (!currentCourse.lessons.some(l => l.id === activeLessonId)) {
+        setActiveLessonId(currentCourse.lessons[0].id);
+      }
+    }
+  }, [currentCourseId, currentCourse]);
   
   // Video player simulated states
   const [isPlaying, setIsPlaying] = useState(false);
@@ -40,7 +53,15 @@ export default function LessonRoom({
   const [quizFeedback, setQuizFeedback] = useState(null);
 
   // Reset lesson state when active lesson changes
-  const activeLesson = currentCourse.lessons.find(l => l.id === activeLessonId) || currentCourse.lessons[0];
+  const activeLesson = (currentCourse.lessons && currentCourse.lessons.find(l => l.id === activeLessonId)) || currentCourse.lessons?.[0] || {
+    id: 'placeholder',
+    number: 1,
+    title: 'Dars mavzusi',
+    duration: '20 daqiqa',
+    notes: 'Dars ma\'lumotlari yuklanmoqda...',
+    actionSteps: [],
+    quiz: []
+  };
 
   useEffect(() => {
     setIsPlaying(false);
@@ -135,12 +156,14 @@ export default function LessonRoom({
         
         {/* Course selector tabs */}
         <div className="mb-6 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          {COURSES.map(course => (
+          {courses.map(course => (
             <button
               key={course.id}
               onClick={() => {
                 setCurrentCourseId(course.id);
-                setActiveLessonId(course.lessons[0].id);
+                if (course.lessons && course.lessons.length > 0) {
+                  setActiveLessonId(course.lessons[0].id);
+                }
               }}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition flex items-center gap-2 ${
                 course.id === currentCourse.id

@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
-import { TOP_PRODUCTS } from '../data/coursesData';
+import React, { useState, useEffect } from 'react';
+import { getStoredProducts } from '../utils/productsStorage';
 import { ShoppingBag, Search, Sparkles, Tag, Check, ArrowUpRight } from 'lucide-react';
 import creatorSignature from '../assets/creator-signature.jpg';
 
 export default function ProductsGuide({ onOpenCreatorModal }) {
+  const [products, setProducts] = useState(() => getStoredProducts());
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const filtered = TOP_PRODUCTS.filter(p => {
-    const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) || 
-                          p.code.includes(search) || 
-                          p.desc.toLowerCase().includes(search.toLowerCase());
+  useEffect(() => {
+    const handleUpdate = () => {
+      setProducts(getStoredProducts());
+    };
+    window.addEventListener('products_updated', handleUpdate);
+    return () => window.removeEventListener('products_updated', handleUpdate);
+  }, []);
+
+  const filtered = products.filter(p => {
+    const titleMatch = (p.title || '').toLowerCase().includes(search.toLowerCase());
+    const codeMatch = (p.code || '').includes(search);
+    const descMatch = (p.desc || '').toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = titleMatch || codeMatch || descMatch;
     const matchesCat = selectedCategory === 'all' || p.category === selectedCategory;
     return matchesSearch && matchesCat;
   });
