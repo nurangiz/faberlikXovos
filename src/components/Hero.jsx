@@ -139,9 +139,9 @@ export default function Hero({ onStartLearning, onOpenCalculator, onOpenExam }) 
                   <div className="text-xl font-black text-faberlic-800">100%</div>
                   <div className="text-[11px] font-medium text-slate-600">Bepul ta'lim</div>
                 </div>
-                <div className="bg-amber-50/60 p-3 rounded-2xl border border-amber-100">
-                  <div className="text-xl font-black text-amber-700">19,000,000</div>
-                  <div className="text-[11px] font-medium text-slate-600">Direktorlik sovg'asi</div>
+                <div className="bg-rose-50/60 p-3 rounded-2xl border border-rose-100">
+                  <div className="text-xl font-black text-faberlic-800">4 ta Modul</div>
+                  <div className="text-[11px] font-medium text-slate-600">Amaliy video kurs</div>
                 </div>
               </div>
 

@@ -15,13 +15,13 @@ export default function Navbar({
   const isRealUser = user && user.id && user.id !== 0 && user.name && !user.name.includes('Mehmon');
 
   const navItems = [
-    { id: 'courses', label: 'Barcha Kurslar', icon: BookOpen },
-    { id: 'classroom', label: 'Darslar Xonasi', icon: Sparkles, badge: 'LMS' },
-    { id: 'feed', label: 'Lenta & Ovozli Xabarlar', icon: Sparkles, badge: 'Yangi' },
-    { id: 'calculator', label: 'Daromad Kalkulyatori', icon: Calculator },
-    { id: 'certificate', label: 'Sertifikat Olish', icon: Award, highlight: true },
-    { id: 'ranking', label: 'Liderlar Reytingi', icon: Trophy },
-    { id: 'products', label: 'Katalog Ensiklopediya', icon: ShoppingBag },
+    { id: 'courses', label: 'Kurslar', icon: BookOpen },
+    { id: 'classroom', label: 'Darslar', icon: Sparkles, badge: 'LMS' },
+    { id: 'feed', label: 'Lenta & Ovoz', icon: Sparkles, badge: 'Yangi' },
+    { id: 'calculator', label: 'Kalkulyator', icon: Calculator },
+    { id: 'certificate', label: 'Sertifikat', icon: Award, highlight: true },
+    { id: 'ranking', label: 'Reyting', icon: Trophy },
+    { id: 'products', label: 'Katalog', icon: ShoppingBag },
   ];
 
   const handleNavClick = (id) => {
@@ -65,37 +65,37 @@ export default function Navbar({
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-20 gap-2 sm:gap-4">
           
           {/* Logo */}
           <div 
             onClick={() => handleNavClick('home')}
-            className="flex items-center gap-3 cursor-pointer group"
+            className="flex items-center gap-2.5 sm:gap-3 cursor-pointer group shrink-0"
           >
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-faberlic-600 via-faberlic-700 to-rose-900 flex items-center justify-center text-white shadow-md shadow-faberlic-500/20 group-hover:scale-105 transition-transform duration-300 relative">
-              <span className="font-serif font-black text-2xl tracking-tighter">FL</span>
-              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-faberlic-600 via-faberlic-700 to-rose-900 flex items-center justify-center text-white shadow-md shadow-faberlic-500/20 group-hover:scale-105 transition-transform duration-300 relative">
+              <span className="font-serif font-black text-xl sm:text-2xl tracking-tighter">FL</span>
+              <span className="absolute -top-1 -right-1 flex h-3 w-3 sm:h-3.5 sm:w-3.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-500 border border-white"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 sm:h-3.5 sm:w-3.5 bg-amber-500 border border-white"></span>
               </span>
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-serif font-black text-xl sm:text-2xl text-slate-900 tracking-tight">
+                <span className="font-serif font-black text-lg sm:text-2xl text-slate-900 tracking-tight">
                   FABERLIC
                 </span>
-                <span className="text-xs font-extrabold uppercase px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm">
+                <span className="text-[10px] sm:text-xs font-extrabold uppercase px-1.5 sm:px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm">
                   Akademiya
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-rose-700 tracking-wide">
+              <p className="text-[10px] sm:text-[11px] font-medium text-rose-700 tracking-wide">
                 Ayollar va Qizlar Ta'lim Markazi
               </p>
             </div>
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden xl:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-1 xl:gap-1.5 flex-1 justify-center max-w-2xl 2xl:max-w-3xl">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -103,13 +103,13 @@ export default function Navbar({
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item.id)}
-                  className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all duration-200 relative ${
+                  className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all duration-200 relative whitespace-nowrap ${
                     isActive
                       ? 'bg-rose-50 text-faberlic-700 font-bold shadow-sm'
                       : 'text-slate-600 hover:text-faberlic-700 hover:bg-slate-50'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-faberlic-700' : 'text-slate-400'}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-faberlic-700' : 'text-slate-400'}`} />
                   <span>{item.label}</span>
                   {item.badge && (
                     <span className="bg-rose-100 text-faberlic-700 text-[10px] px-1.5 py-0.2 rounded font-bold">
@@ -127,11 +127,11 @@ export default function Navbar({
           </nav>
 
           {/* Right Action & User Profile */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {isRealUser ? (
               <>
                 {/* Real Streak & points badge */}
-                <div className="hidden sm:flex items-center gap-2 bg-rose-50/70 border border-rose-100/80 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700">
+                <div className="hidden sm:flex items-center gap-2 bg-rose-50/70 border border-rose-100/80 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 shrink-0">
                   <span className="flex items-center text-amber-600 gap-0.5">
                     <Flame className="w-4 h-4 fill-amber-500 text-amber-500" />
                     {user.streak_days || 1} kun
@@ -145,7 +145,7 @@ export default function Navbar({
                 {/* Profile modal trigger */}
                 <button
                   onClick={onOpenProfile}
-                  className="flex items-center gap-2 bg-gradient-to-r from-faberlic-600 to-rose-600 hover:from-faberlic-700 hover:to-rose-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-faberlic-600/20 active:scale-95 transition"
+                  className="flex items-center gap-2 bg-gradient-to-r from-faberlic-600 to-rose-600 hover:from-faberlic-700 hover:to-rose-700 text-white px-3 sm:px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-faberlic-600/20 active:scale-95 transition shrink-0"
                 >
                   <User className="w-4 h-4" />
                   <span className="hidden sm:inline">{user.name.split(' ')[0]}</span>

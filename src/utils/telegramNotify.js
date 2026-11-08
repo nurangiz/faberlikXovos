@@ -9,7 +9,9 @@ const ADMIN_CHAT_ID_KEY = 'faberlic_admin_telegram_chat_id';
 
 export function getStoredAdminChatId() {
   try {
-    return localStorage.getItem(ADMIN_CHAT_ID_KEY) || '';
+    const cid = localStorage.getItem(ADMIN_CHAT_ID_KEY) || '';
+    if (cid === '9135418346') return '';
+    return cid;
   } catch (_) {
     return '';
   }
@@ -17,8 +19,9 @@ export function getStoredAdminChatId() {
 
 export function saveStoredAdminChatId(chatId) {
   try {
-    if (chatId) {
-      localStorage.setItem(ADMIN_CHAT_ID_KEY, String(chatId).trim());
+    const clean = String(chatId || '').trim();
+    if (clean && clean !== '9135418346') {
+      localStorage.setItem(ADMIN_CHAT_ID_KEY, clean);
     } else {
       localStorage.removeItem(ADMIN_CHAT_ID_KEY);
     }
@@ -102,7 +105,11 @@ export async function notifyTelegramRegistration(userData) {
  * Send a test message from Admin Panel
  */
 export async function sendTestTelegramMessage(chatId) {
-  if (!chatId) throw new Error("Iltimos, Telegram Chat ID kiriting!");
+  const cleanId = String(chatId || '').trim();
+  if (!cleanId) throw new Error("Iltimos, Telegram Chat ID kiriting!");
+  if (cleanId === '9135418346') {
+    throw new Error("9135418346 — bu botning o'zini ID raqami. Telegramda @Faberlicuz_bot ga kirib 080910 deb yozing, shaxsiy ID'ingiz avtomatik aniqlanadi!");
+  }
   
   const { dateStr, timeStr } = getTashkentTimeInfo();
   const text = `🔔 <b>TEST BILDIRISHNOMA:</b>\n\n` +

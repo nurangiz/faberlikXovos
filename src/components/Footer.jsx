@@ -107,13 +107,13 @@ export default function Footer({ onNavClick, onOpenAdmin }) {
               Savollaringiz bormi? Tajribali mentorlar va minglab qizlar bilan birga fikr almashing:
             </p>
             <a 
-              href="https://t.me" 
+              href="https://t.me/Faberlicuz_bot" 
               target="_blank" 
               rel="noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-faberlic-600 to-rose-600 hover:from-faberlic-700 hover:to-rose-700 text-white font-bold text-xs shadow-md transition"
             >
               <Send className="w-4 h-4" />
-              <span>Telegram Qizlar Klubiga Kirish</span>
+              <span>Telegram Bot: @Faberlicuz_bot</span>
             </a>
           </div>
 
