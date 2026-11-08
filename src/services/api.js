@@ -47,63 +47,87 @@ const saveLocalUsers = (users) => {
 export const api = {
   // 1. Register
   async register(data) {
-    const apiBase = getApiBase();
-    try {
-      const res = await fetch(`${apiBase}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Ro\'yxatdan o\'tishda xatolik yuz berdi');
-      if (result.token) setToken(result.token);
-      if (result.user) {
-        localStorage.setItem(USER_KEY, JSON.stringify(result.user));
-        const localUsers = getLocalUsers();
-        if (!localUsers.some(u => u.phone === result.user.phone)) {
-          localUsers.unshift(result.user);
-          saveLocalUsers(localUsers);
-        }
-        window.dispatchEvent(new Event('users_updated'));
-      }
-      return result;
-    } catch (err) {
-      console.warn("Server ulanishida xatolik, lokal rejimda saqlanmoqda:", err.message);
-      
-      // Local fallback registration
-      const localUsers = getLocalUsers();
-      const existing = localUsers.find(u => u.phone === data.phone);
-      if (existing) {
-        throw new Error("Ushbu telefon raqami bilan hisob allaqachon mavjud.");
-      }
+    const cleanRegion = (data.region || 'Toshkent').trim();
+    const cleanPhone = (data.phone || '').trim();
+    const cleanName = (data.name || '').trim();
 
-      const newUser = {
+    // 1. Prepare local registered user object
+    const localUsers = getLocalUsers();
+    const existingIndex = localUsers.findIndex(u => 
+      (u.phone && cleanPhone && u.phone.replace(/\s+/g, '') === cleanPhone.replace(/\s+/g, '')) ||
+      (u.name && cleanName && u.name.toLowerCase() === cleanName.toLowerCase())
+    );
+
+    let registeredUser;
+    if (existingIndex !== -1) {
+      // Update existing user record with fresh name & region (e.g. Sirdaryo)
+      localUsers[existingIndex] = {
+        ...localUsers[existingIndex],
+        name: cleanName || localUsers[existingIndex].name,
+        phone: cleanPhone || localUsers[existingIndex].phone,
+        region: cleanRegion,
+        points: Math.max(localUsers[existingIndex].points || 0, 50),
+        role: 'student'
+      };
+      registeredUser = localUsers[existingIndex];
+    } else {
+      registeredUser = {
         id: Date.now(),
-        name: data.name.trim(),
-        phone: data.phone.trim(),
-        region: data.region || 'Toshkent',
+        name: cleanName,
+        phone: cleanPhone,
+        region: cleanRegion,
         points: 50,
         streak_days: 1,
         role: 'student',
         created_at: new Date().toISOString()
       };
-
-      localUsers.unshift(newUser);
-      saveLocalUsers(localUsers);
-
-      const fakeToken = `local_token_${newUser.id}`;
-      setToken(fakeToken);
-      localStorage.setItem(USER_KEY, JSON.stringify(newUser));
-      window.dispatchEvent(new Event('users_updated'));
-
-      return {
-        message: "Muvaffaqiyatli ro'yxatdan o'tdingiz!",
-        token: fakeToken,
-        user: newUser,
-        completedLessons: ['l1-1'],
-        certificates: []
-      };
+      localUsers.unshift(registeredUser);
     }
+
+    saveLocalUsers(localUsers);
+    localStorage.setItem(USER_KEY, JSON.stringify(registeredUser));
+    const fakeToken = `local_token_${registeredUser.id}`;
+    setToken(fakeToken);
+    window.dispatchEvent(new Event('users_updated'));
+
+    // Optional server sync if API is alive
+    const apiBase = getApiBase();
+    if (apiBase) {
+      try {
+        const res = await fetch(`${apiBase}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: cleanName, phone: cleanPhone, password: data.password, region: cleanRegion })
+        });
+        if (res.ok) {
+          const result = await res.json();
+          if (result.token) setToken(result.token);
+          if (result.user) {
+            registeredUser = { ...registeredUser, ...result.user, region: cleanRegion };
+            localStorage.setItem(USER_KEY, JSON.stringify(registeredUser));
+            const idx = localUsers.findIndex(u => 
+              (u.phone && registeredUser.phone && u.phone.replace(/\s+/g, '') === registeredUser.phone.replace(/\s+/g, '')) ||
+              u.id === registeredUser.id
+            );
+            if (idx !== -1) {
+              localUsers[idx] = registeredUser;
+              saveLocalUsers(localUsers);
+            }
+            window.dispatchEvent(new Event('users_updated'));
+          }
+        }
+      } catch (err) {
+        console.warn("Backend sync notice:", err.message);
+      }
+    }
+
+    return {
+      message: "Muvaffaqiyatli ro'yxatdan o'tdingiz!",
+      token: fakeToken,
+      user: registeredUser,
+      completedLessons: ['l1-1'],
+      certificates: []
+    };
   },
 
   // 2. Login
@@ -182,28 +206,67 @@ export const api = {
 
   // 4. Update Profile
   async updateProfile(data) {
-    const apiBase = getApiBase();
+    const cleanRegion = (data.region || 'Toshkent').trim();
+    const cleanName = (data.name || '').trim();
+    const cleanPhone = (data.phone || '').trim();
+
+    let updatedUser = null;
     try {
-      const res = await fetch(`${apiBase}/api/auth/profile`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data)
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Profilni yangilashda xatolik');
-      if (result.user) localStorage.setItem(USER_KEY, JSON.stringify(result.user));
-      return result;
-    } catch (err) {
-      // Local fallback
       const cached = localStorage.getItem(USER_KEY);
       if (cached) {
         const user = JSON.parse(cached);
-        const updated = { ...user, ...data };
-        localStorage.setItem(USER_KEY, JSON.stringify(updated));
-        return { message: "Profil yangilandi!", user: updated };
+        updatedUser = {
+          ...user,
+          name: cleanName || user.name,
+          region: cleanRegion || user.region,
+          phone: cleanPhone || user.phone
+        };
+        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
       }
-      throw err;
+    } catch (e) {}
+
+    // Update in USERS_DB_KEY
+    try {
+      const localUsers = getLocalUsers();
+      if (updatedUser) {
+        const idx = localUsers.findIndex(u => 
+          (u.phone && updatedUser.phone && u.phone.replace(/\s+/g, '') === updatedUser.phone.replace(/\s+/g, '')) ||
+          u.id === updatedUser.id
+        );
+        if (idx !== -1) {
+          localUsers[idx] = { ...localUsers[idx], ...updatedUser };
+        } else {
+          localUsers.unshift(updatedUser);
+        }
+        saveLocalUsers(localUsers);
+      }
+    } catch (e) {}
+
+    window.dispatchEvent(new Event('users_updated'));
+
+    const apiBase = getApiBase();
+    if (apiBase) {
+      try {
+        const res = await fetch(`${apiBase}/api/auth/profile`, {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ ...data, region: cleanRegion, name: cleanName, phone: cleanPhone })
+        });
+        if (res.ok) {
+          const result = await res.json();
+          if (result.user) {
+            updatedUser = { ...updatedUser, ...result.user, region: cleanRegion };
+            localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+            window.dispatchEvent(new Event('users_updated'));
+          }
+        }
+      } catch (err) {}
     }
+
+    return {
+      message: "Profil muvaffaqiyatli yangilandi!",
+      user: updatedUser
+    };
   },
 
   // 5. Complete Lesson
@@ -429,5 +492,56 @@ export const api = {
       totalLessonsCompleted: realCount * 4 + 48,
       totalCertificates: Math.max(3, Math.floor(realCount * 0.4))
     };
+  },
+
+  // 10. Unified All Users (for Admin Panel & Analytics)
+  async getAllUsers() {
+    const defaultLeaders = [
+      { id: 101, name: "Zuhra Mamadaliyeva", phone: "+998 90 111 22 33", region: "Toshkent", points: 1450, streak_days: 18, created_at: "2026-11-01" },
+      { id: 102, name: "Nargiza Yoqubova", phone: "+998 93 222 33 44", region: "Samarqand", points: 1250, streak_days: 14, created_at: "2026-11-02" },
+      { id: 103, name: "Shahnoza To'rayeva", phone: "+998 97 333 44 55", region: "Andijon", points: 1100, streak_days: 12, created_at: "2026-11-03" },
+      { id: 104, name: "Malika Abdullayeva", phone: "+998 91 444 55 66", region: "Buxoro", points: 950, streak_days: 9, created_at: "2026-11-04" },
+      { id: 105, name: "Gulbahor Ergasheva", phone: "+998 94 555 66 77", region: "Namangan", points: 850, streak_days: 8, created_at: "2026-11-05" },
+      { id: 106, name: "Madina Aliyeva", phone: "+998 90 999 88 77", region: "Samarqand", points: 250, streak_days: 3, created_at: "2026-11-06" }
+    ];
+
+    const localUsers = getLocalUsers();
+    let currentLocalUser = null;
+    try {
+      currentLocalUser = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+    } catch (e) {}
+
+    let serverUsers = [];
+    const apiBase = getApiBase();
+    if (apiBase) {
+      try {
+        const res = await fetch(`${apiBase}/api/admin/users`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.users)) serverUsers = data.users;
+        }
+      } catch (e) {}
+    }
+
+    const map = new Map();
+    // 1. Default leaders
+    defaultLeaders.forEach(u => map.set((u.phone || '').replace(/\s+/g, ''), u));
+    // 2. Server users
+    serverUsers.forEach(u => map.set((u.phone || '').replace(/\s+/g, ''), u));
+    // 3. Local users
+    localUsers.forEach(u => {
+      const key = (u.phone ? u.phone.replace(/\s+/g, '') : null) || String(u.id);
+      map.set(key, u);
+    });
+    // 4. Current session user
+    if (currentLocalUser && currentLocalUser.name && !currentLocalUser.name.includes('Mehmon')) {
+      const key = (currentLocalUser.phone ? currentLocalUser.phone.replace(/\s+/g, '') : null) || String(currentLocalUser.id);
+      const existing = map.get(key) || {};
+      map.set(key, { ...existing, ...currentLocalUser });
+    }
+
+    const unified = Array.from(map.values());
+    saveLocalUsers(unified);
+    return unified;
   }
 };

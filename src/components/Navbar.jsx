@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, BookOpen, Award, Calculator, Trophy, ShoppingBag, User, Menu, X, Flame, Send, LogIn, ShieldCheck } from 'lucide-react';
+import { Sparkles, BookOpen, Award, Calculator, Trophy, ShoppingBag, User, Menu, X, Flame, Send, LogIn, ShieldCheck, Lock } from 'lucide-react';
 
 export default function Navbar({ 
   activeTab, 
@@ -7,7 +7,8 @@ export default function Navbar({
   user, 
   onOpenProfile, 
   onOpenAuth,
-  onOpenVerify
+  onOpenVerify,
+  onOpenAdmin
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -43,6 +44,13 @@ export default function Navbar({
             className="flex items-center gap-1 text-[11px] font-bold text-amber-200 hover:text-white transition"
           >
             <ShieldCheck className="w-3.5 h-3.5" /> Sertifikatni Tekshirish
+          </button>
+          <button
+            onClick={onOpenAdmin}
+            className="flex items-center gap-1 text-[11px] font-bold text-rose-200 hover:text-white transition"
+            title="Admin Panel"
+          >
+            <Lock className="w-3 h-3 text-amber-300" /> Admin
           </button>
           <a 
             href="https://t.me" 
@@ -217,7 +225,7 @@ export default function Navbar({
             );
           })}
 
-          <div className="pt-2 border-t border-slate-100">
+          <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
@@ -227,6 +235,20 @@ export default function Navbar({
             >
               <ShieldCheck className="w-4 h-4 text-amber-600" />
               <span>Sertifikatni Tekshirish</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenAdmin();
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-rose-50 rounded-xl transition"
+            >
+              <div className="flex items-center gap-2">
+                <Lock className="w-4 h-4 text-amber-600" />
+                <span>Admin Panel</span>
+              </div>
+              <span className="text-[10px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-mono font-bold">Kodi: 080910</span>
             </button>
           </div>
         </div>

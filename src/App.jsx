@@ -156,6 +156,7 @@ export default function App() {
           setVerifyCertId('');
           setIsVerifyOpen(true);
         }}
+        onOpenAdmin={handleOpenAdmin}
       />
 
       {/* Main Body */}

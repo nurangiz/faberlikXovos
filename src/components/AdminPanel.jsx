@@ -84,43 +84,21 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
     // 1. Load courses
     setCourses(getStoredCourses());
 
-    // 2. Load users from localStorage and API
-    let combinedUsers = [];
+    // 2. Load users using unified API (localStorage + server + active session)
     try {
-      const localUsers = JSON.parse(localStorage.getItem('faberlic_users_db') || '[]');
-      combinedUsers = [...localUsers];
-    } catch (e) {}
+      const allUsers = await api.getAllUsers();
+      setUsers(allUsers);
 
-    // Add current user if exists
-    try {
-      const current = JSON.parse(localStorage.getItem('faberlic_local_user') || 'null');
-      if (current && !combinedUsers.some(u => u.phone === current.phone)) {
-        combinedUsers.unshift(current);
-      }
-    } catch (e) {}
-
-    // Add default registered leaders if empty
-    if (combinedUsers.length === 0) {
-      combinedUsers = [
-        { id: 101, name: "Zuhra Mamadaliyeva", phone: "+998 90 111 22 33", region: "Toshkent", points: 1450, streak_days: 18, created_at: "2026-11-01" },
-        { id: 102, name: "Nargiza Yoqubova", phone: "+998 93 222 33 44", region: "Samarqand", points: 1250, streak_days: 14, created_at: "2026-11-02" },
-        { id: 103, name: "Shahnoza To'rayeva", phone: "+998 97 333 44 55", region: "Andijon", points: 1100, streak_days: 12, created_at: "2026-11-03" },
-        { id: 104, name: "Malika Abdullayeva", phone: "+998 91 444 55 66", region: "Buxoro", points: 950, streak_days: 9, created_at: "2026-11-04" },
-        { id: 105, name: "Gulbahor Ergasheva", phone: "+998 94 555 66 77", region: "Namangan", points: 850, streak_days: 8, created_at: "2026-11-05" },
-        { id: 106, name: "Madina Aliyeva", phone: "+998 90 999 88 77", region: "Samarqand", points: 250, streak_days: 3, created_at: "2026-11-06" }
-      ];
-      localStorage.setItem('faberlic_users_db', JSON.stringify(combinedUsers));
+      // Calculate metrics
+      setStats({
+        totalUsers: allUsers.length + 15400,
+        totalRealUsers: allUsers.length,
+        totalLessonsCompleted: allUsers.length * 4 + 38,
+        totalCertificates: Math.max(3, Math.floor(allUsers.length * 0.4))
+      });
+    } catch (e) {
+      console.error("Admin load users error:", e);
     }
-
-    setUsers(combinedUsers);
-
-    // Calculate metrics
-    setStats({
-      totalUsers: combinedUsers.length + 15400,
-      totalRealUsers: combinedUsers.length,
-      totalLessonsCompleted: combinedUsers.length * 4 + 38,
-      totalCertificates: Math.max(3, Math.floor(combinedUsers.length * 0.4))
-    });
   };
 
   const showAlert = (msg) => {
@@ -342,6 +320,7 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
     const updated = users.filter(u => u.id !== userId);
     setUsers(updated);
     localStorage.setItem('faberlic_users_db', JSON.stringify(updated));
+    window.dispatchEvent(new Event('users_updated'));
     showAlert("O'quvchi o'chirildi.");
   };
 
@@ -354,6 +333,7 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
     });
     setUsers(updated);
     localStorage.setItem('faberlic_users_db', JSON.stringify(updated));
+    window.dispatchEvent(new Event('users_updated'));
     showAlert(`O'quvchiga ${amount > 0 ? '+' + amount : amount} ball berildi!`);
   };
 
@@ -379,6 +359,7 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
     localStorage.setItem('faberlic_users_db', JSON.stringify(updated));
     setIsAddUserOpen(false);
     setNewUserForm({ name: '', phone: '+998 ', region: 'Toshkent', points: 100 });
+    window.dispatchEvent(new Event('users_updated'));
     showAlert("Yangi o'quvchi muvaffaqiyatli qo'shildi!");
   };
 
@@ -477,9 +458,13 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
   });
 
   const filteredUsers = users.filter(u => {
-    const matchSearch = (u.name || '').toLowerCase().includes(searchUser.toLowerCase()) ||
-                        (u.phone || '').includes(searchUser);
-    const matchRegion = filterRegion === 'all' || u.region === filterRegion;
+    const s = searchUser.toLowerCase().trim();
+    const matchSearch = !s || 
+      (u.name || '').toLowerCase().includes(s) ||
+      (u.phone || '').includes(s) ||
+      (u.region || '').toLowerCase().includes(s);
+    const matchRegion = filterRegion === 'all' || 
+      (u.region || '').trim().toLowerCase() === filterRegion.trim().toLowerCase();
     return matchSearch && matchRegion;
   });
 
@@ -871,16 +856,71 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
                 </button>
               </div>
 
-              {/* Users Table */}
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+              {/* Users View: Responsive Cards for Mobile + High-Density Table for Desktop */}
+              
+              {/* MOBILE CARDS VIEW (< sm) */}
+              <div className="sm:hidden space-y-3">
+                {filteredUsers.length === 0 ? (
+                  <div className="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+                    Hech qanday o'quvchi topilmadi.
+                  </div>
+                ) : (
+                  filteredUsers.map((u, idx) => (
+                    <div key={u.id || idx} className="bg-white p-4 rounded-2xl border border-rose-100 shadow-sm space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-faberlic-700 to-rose-600 text-white font-bold flex items-center justify-center text-xs shadow-xs">
+                            {idx + 1}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-900 text-sm">{u.name}</div>
+                            <a href={`tel:${u.phone}`} className="text-xs text-rose-700 font-mono font-medium block">
+                              {u.phone}
+                            </a>
+                          </div>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full bg-rose-50 text-faberlic-800 text-xs font-black border border-rose-200 shadow-xs">
+                          {u.points || 0} ball
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
+                        <span className="inline-flex items-center gap-1 font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
+                          <MapPin className="w-3.5 h-3.5 text-faberlic-600" />
+                          <span>{u.region || 'Toshkent'}</span>
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleAddPoints(u.id, 50)}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold border border-emerald-200 active:scale-95 transition"
+                            title="+50 ball"
+                          >
+                            +50 ball
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(u.id)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition"
+                            title="O'chirish"
+                          >
+                            <Trash2 className="w-4 h-4 text-rose-500" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* DESKTOP TABLE VIEW (>= sm) */}
+              <div className="hidden sm:block bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
                       <tr>
                         <th className="p-3.5">#</th>
                         <th className="p-3.5">Ism-Familiya</th>
-                        <th className="p-3.5">Telefon</th>
-                        <th className="p-3.5">Viloyat</th>
+                        <th className="p-3.5">Telefon Raqami</th>
+                        <th className="p-3.5">Viloyat / Shahar</th>
                         <th className="p-3.5">Ballar</th>
                         <th className="p-3.5">Streak</th>
                         <th className="p-3.5 text-right">Amallar</th>
@@ -899,24 +939,29 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
                             <td className="p-3.5 text-slate-400 font-bold">{idx + 1}</td>
                             <td className="p-3.5 font-bold text-slate-900">{u.name}</td>
                             <td className="p-3.5 text-slate-600 font-mono">{u.phone}</td>
-                            <td className="p-3.5 text-slate-700">{u.region || 'Toshkent'}</td>
+                            <td className="p-3.5">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-rose-50 text-faberlic-800 font-bold border border-rose-200/80">
+                                <MapPin className="w-3.5 h-3.5 text-faberlic-600" />
+                                {u.region || 'Toshkent'}
+                              </span>
+                            </td>
                             <td className="p-3.5 font-black text-faberlic-800">{u.points || 0} ball</td>
                             <td className="p-3.5 text-amber-700 font-bold">{u.streak_days || 1} kun</td>
                             <td className="p-3.5 text-right">
                               <div className="flex items-center justify-end gap-1.5">
                                 <button
                                   onClick={() => handleAddPoints(u.id, 50)}
-                                  className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-[11px] font-bold"
+                                  className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold border border-emerald-200 transition"
                                   title="+50 ball qo'shish"
                                 >
-                                  +50
+                                  +50 ball
                                 </button>
                                 <button
                                   onClick={() => handleDeleteUser(u.id)}
-                                  className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                                  className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
                                   title="O'chirish"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Trash2 className="w-4 h-4 text-rose-500" />
                                 </button>
                               </div>
                             </td>

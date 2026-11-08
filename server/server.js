@@ -62,7 +62,7 @@ function optionalAuthenticateToken(req, res, next) {
 
 // ======================== AUTH ROUTES ========================
 
-// 1. Register new user
+// 1. Register new user (or update if already exists)
 app.post('/api/auth/register', (req, res) => {
   try {
     const { name, phone, password, region } = req.body;
@@ -71,9 +71,35 @@ app.post('/api/auth/register', (req, res) => {
       return res.status(400).json({ error: "Barcha maydonlarni to'ldirish shart." });
     }
 
-    const existing = db.prepare('SELECT id FROM users WHERE phone = ?').get(phone);
+    const cleanPhone = phone.trim();
+    const cleanName = name.trim();
+    const cleanRegion = region.trim();
+
+    const existing = db.prepare('SELECT id, password_hash FROM users WHERE phone = ?').get(cleanPhone);
     if (existing) {
-      return res.status(400).json({ error: "Ushbu telefon raqami bilan hisob allaqachon ro'yxatdan o'tgan." });
+      // If user exists, update their name and region (e.g. Sirdaryo)
+      db.prepare(`
+        UPDATE users SET name = ?, region = ? WHERE id = ?
+      `).run(cleanName, cleanRegion, existing.id);
+
+      const updatedUser = db.prepare(`
+        SELECT id, name, phone, region, points, streak_days, role, created_at 
+        FROM users WHERE id = ?
+      `).get(existing.id);
+
+      const token = jwt.sign(
+        { id: existing.id, phone: updatedUser.phone, name: updatedUser.name },
+        JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+
+      return res.json({
+        message: "Hisob ma'lumotlari muvaffaqiyatli yangilandi!",
+        token,
+        user: updatedUser,
+        completedLessons: ['l1-1'],
+        certificates: []
+      });
     }
 
     const salt = bcrypt.genSaltSync(10);
@@ -83,7 +109,7 @@ app.post('/api/auth/register', (req, res) => {
       INSERT INTO users (name, phone, password_hash, region, points, streak_days, last_active_date)
       VALUES (?, ?, ?, ?, 50, 1, date('now'))
     `);
-    const result = stmt.run(name.trim(), phone.trim(), password_hash, region.trim());
+    const result = stmt.run(cleanName, cleanPhone, password_hash, cleanRegion);
 
     // Auto complete 1st lesson as welcoming bonus
     db.prepare(`
@@ -92,7 +118,7 @@ app.post('/api/auth/register', (req, res) => {
     `).run(result.lastInsertRowid);
 
     const token = jwt.sign(
-      { id: result.lastInsertRowid, phone, name },
+      { id: result.lastInsertRowid, phone: cleanPhone, name: cleanName },
       JWT_SECRET,
       { expiresIn: '30d' }
     );
@@ -113,6 +139,7 @@ app.post('/api/auth/register', (req, res) => {
     console.error("Register error:", err);
     return res.status(500).json({ error: "Server xatosi yuz berdi." });
   }
+});
 });
 
 // 2. Login user
@@ -494,6 +521,20 @@ app.get('/api/leaderboard', (req, res) => {
     return res.json({ leaderboard: formatted });
   } catch (err) {
     console.error("Leaderboard error:", err);
+    return res.status(500).json({ error: "Server xatosi yuz berdi." });
+  }
+});
+
+// 9. Admin: Get all registered users from DB
+app.get('/api/admin/users', (req, res) => {
+  try {
+    const users = db.prepare(`
+      SELECT id, name, phone, region, points, streak_days, role, created_at 
+      FROM users ORDER BY id DESC
+    `).all();
+    return res.json({ users });
+  } catch (err) {
+    console.error("Admin get users error:", err);
     return res.status(500).json({ error: "Server xatosi yuz berdi." });
   }
 });
