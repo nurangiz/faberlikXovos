@@ -168,9 +168,9 @@ export default function UserModal({
     <dialog
       ref={dialogRef}
       aria-labelledby="profile-dialog-title"
-      className="p-0 rounded-3xl shadow-2xl max-w-lg w-full bg-white border border-rose-100 text-slate-800 backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm"
+      className="p-0 rounded-3xl shadow-2xl w-[calc(100%-1.5rem)] max-w-lg m-auto bg-white border border-rose-100 text-slate-800 backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm overflow-hidden my-auto"
     >
-      <div className="p-6 sm:p-8 space-y-6">
+      <div className="p-5 sm:p-7 space-y-5">
         
         {/* Top Header */}
         <div className="flex items-center justify-between pb-4 border-b border-rose-100">
@@ -383,34 +383,34 @@ export default function UserModal({
           )}
 
           {/* Bottom Action Buttons */}
-          <div className="pt-2 flex items-center justify-between gap-3">
+          <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             {isRealUser ? (
               <button
                 type="button"
                 onClick={handleUserLogout}
-                className="px-3.5 py-2.5 rounded-xl text-xs font-bold text-rose-700 hover:bg-rose-50 flex items-center gap-1.5 transition"
+                className="px-3.5 py-2 rounded-xl text-xs font-bold text-rose-700 hover:bg-rose-50 flex items-center justify-center gap-1.5 transition"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Hisobdan Chiqish</span>
               </button>
             ) : (
-              <span className="text-[11px] text-slate-500 font-medium">
+              <span className="text-[11px] text-slate-500 font-medium text-center sm:text-left">
                 🌸 Ro'yxatdan o'tgach +50 ball beriladi!
               </span>
             )}
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-end">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
+                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition text-center"
               >
                 Yopish
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2.5 rounded-xl bg-faberlic-700 hover:bg-faberlic-800 text-white text-xs font-bold shadow-md shadow-faberlic-600/25 active:scale-95 transition disabled:opacity-50"
+                className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-faberlic-700 hover:bg-faberlic-800 text-white text-xs font-bold shadow-md shadow-faberlic-600/25 active:scale-95 transition disabled:opacity-50 text-center"
               >
                 {loading 
                   ? "Saqlanmoqda..." 

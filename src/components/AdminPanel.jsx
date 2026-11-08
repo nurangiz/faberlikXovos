@@ -1248,7 +1248,12 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
                         filteredUsers.map((u, idx) => (
                           <tr key={u.id || idx} className="hover:bg-rose-50/40 transition">
                             <td className="p-3.5 text-slate-400 font-bold">{idx + 1}</td>
-                            <td className="p-3.5 font-bold text-slate-900">{u.name}</td>
+                            <td className="p-3.5 font-bold text-slate-900">
+                              <div className="flex items-center gap-1.5">
+                                <span>{u.name}</span>
+                                {idx === 0 && <span className="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded uppercase">Yangi</span>}
+                              </div>
+                            </td>
                             <td className="p-3.5 text-slate-600 font-mono">{u.phone}</td>
                             <td className="p-3.5">
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-rose-50 text-faberlic-800 font-bold border border-rose-200/80">

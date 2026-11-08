@@ -49,21 +49,21 @@ export default function Hero({ onStartLearning, onOpenCalculator, onOpenExam }) 
             </div>
 
             {/* CTA Action Buttons */}
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4">
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2.5 sm:gap-4 w-full">
               <button
                 onClick={onStartLearning}
-                className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-faberlic-700 via-rose-600 to-pink-600 hover:from-faberlic-800 hover:to-pink-700 text-white font-bold text-base shadow-xl shadow-faberlic-600/30 flex items-center justify-center gap-3 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+                className="w-full sm:w-auto px-5 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-faberlic-700 via-rose-600 to-pink-600 hover:from-faberlic-800 hover:to-pink-700 text-white font-bold text-sm sm:text-base shadow-xl shadow-faberlic-600/30 flex items-center justify-center gap-2.5 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
               >
-                <Play className="w-5 h-5 fill-white" />
+                <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white shrink-0" />
                 <span>Darslarni Boshlash (Bepul)</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </button>
 
               <button
                 onClick={onOpenCalculator}
-                className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white hover:bg-rose-50/70 border border-rose-200 text-faberlic-800 font-bold text-base shadow-sm flex items-center justify-center gap-2 transition"
+                className="w-full sm:w-auto px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-white hover:bg-rose-50/70 border border-rose-200 text-faberlic-800 font-bold text-sm sm:text-base shadow-sm flex items-center justify-center gap-2 transition"
               >
-                <Calculator className="w-5 h-5 text-faberlic-700" />
+                <Calculator className="w-4 h-4 sm:w-5 sm:h-5 text-faberlic-700 shrink-0" />
                 <span>Daromadni Hisoblash</span>
               </button>
             </div>

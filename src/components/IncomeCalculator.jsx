@@ -76,15 +76,15 @@ export default function IncomeCalculator() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Controls Box (7 cols) */}
-          <div className="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-rose-100 shadow-xl space-y-6">
+          <div className="lg:col-span-7 bg-white p-5 sm:p-8 rounded-3xl border border-rose-100 shadow-xl space-y-6 overflow-hidden w-full max-w-full">
             
             {/* Input 1: Personal volume */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-bold text-slate-800">
+                <label className="text-xs sm:text-sm font-bold text-slate-800">
                   1. Shaxsiy Buyurtmangiz (LO - Shaxsiy hajm):
                 </label>
-                <span className="text-base font-extrabold text-faberlic-700 bg-rose-50 px-3 py-1 rounded-xl">
+                <span className="text-sm sm:text-base font-extrabold text-faberlic-700 bg-rose-50 px-2.5 sm:px-3 py-1 rounded-xl shrink-0">
                   {personalPoints} ball
                 </span>
               </div>
@@ -97,21 +97,21 @@ export default function IncomeCalculator() {
                 onChange={(e) => setPersonalPoints(Number(e.target.value))}
                 className="w-full accent-faberlic-600 cursor-pointer h-2 bg-rose-100 rounded-lg"
               />
-              <div className="flex justify-between text-[11px] text-slate-500 font-medium">
-                <span>0 ball</span>
-                <span className="text-faberlic-700 font-bold">50 ball (26% chegirma)</span>
-                <span className="text-amber-700 font-bold">100 ball (VIP status)</span>
-                <span>200 ball</span>
+              <div className="flex justify-between text-[10px] sm:text-[11px] text-slate-500 font-medium gap-1">
+                <span>0</span>
+                <span className="text-faberlic-700 font-bold text-center">50 ball <span className="hidden sm:inline">(26% chegirma)</span></span>
+                <span className="text-amber-700 font-bold text-center">100 ball <span className="hidden sm:inline">(VIP)</span></span>
+                <span>200</span>
               </div>
             </div>
 
             {/* Input 2: Team members */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-bold text-slate-800">
+                <label className="text-xs sm:text-sm font-bold text-slate-800">
                   2. Jamoangizdagi Faol Qizlar Soni:
                 </label>
-                <span className="text-base font-extrabold text-faberlic-700 bg-rose-50 px-3 py-1 rounded-xl">
+                <span className="text-sm sm:text-base font-extrabold text-faberlic-700 bg-rose-50 px-2.5 sm:px-3 py-1 rounded-xl shrink-0">
                   {teamMembers} kishi
                 </span>
               </div>
@@ -124,8 +124,8 @@ export default function IncomeCalculator() {
                 onChange={(e) => setTeamMembers(Number(e.target.value))}
                 className="w-full accent-faberlic-600 cursor-pointer h-2 bg-rose-100 rounded-lg"
               />
-              <div className="flex justify-between text-[11px] text-slate-500 font-medium">
-                <span>0 ta</span>
+              <div className="flex justify-between text-[10px] sm:text-[11px] text-slate-500 font-medium gap-1">
+                <span>0</span>
                 <span>25 ta</span>
                 <span>50 ta</span>
                 <span>100+ ta</span>
@@ -135,10 +135,10 @@ export default function IncomeCalculator() {
             {/* Input 3: Avg points per member */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-bold text-slate-800">
+                <label className="text-xs sm:text-sm font-bold text-slate-800">
                   3. Har bir a'zoning o'rtacha xaridi (ball):
                 </label>
-                <span className="text-base font-extrabold text-faberlic-700 bg-rose-50 px-3 py-1 rounded-xl">
+                <span className="text-sm sm:text-base font-extrabold text-faberlic-700 bg-rose-50 px-2.5 sm:px-3 py-1 rounded-xl shrink-0">
                   {avgPointsPerMember} ball
                 </span>
               </div>
@@ -151,24 +151,24 @@ export default function IncomeCalculator() {
                 onChange={(e) => setAvgPointsPerMember(Number(e.target.value))}
                 className="w-full accent-faberlic-600 cursor-pointer h-2 bg-rose-100 rounded-lg"
               />
-              <div className="flex justify-between text-[11px] text-slate-500 font-medium">
-                <span>10 ball (Kichik ro'zg'or)</span>
-                <span>50 ball (To'liq to'plam)</span>
-                <span>100 ball (VIP sotuvchi)</span>
+              <div className="flex justify-between text-[10px] sm:text-[11px] text-slate-500 font-medium gap-1">
+                <span>10 <span className="hidden sm:inline">ball (Kichik)</span></span>
+                <span className="text-center font-bold text-faberlic-700">50 <span className="hidden sm:inline">ball (Standart)</span></span>
+                <span className="text-right font-bold text-amber-700">100+ <span className="hidden sm:inline">ball (VIP)</span></span>
               </div>
             </div>
 
             {/* Total calculation indicator bar */}
-            <div className="p-4 bg-gradient-to-r from-rose-50 to-pink-50 rounded-2xl border border-rose-200/80 flex items-center justify-between">
+            <div className="p-4 bg-gradient-to-r from-rose-50 to-pink-50 rounded-2xl border border-rose-200/80 flex items-center justify-between gap-2">
               <div>
-                <span className="text-xs font-semibold text-slate-600">Jami Guruh Hajmi (GO):</span>
-                <div className="text-2xl font-black text-slate-900">
+                <span className="text-xs font-semibold text-slate-600 block">Jami Guruh Hajmi (GO):</span>
+                <div className="text-xl sm:text-2xl font-black text-slate-900">
                   {groupPoints.toLocaleString()} ball
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-xs font-semibold text-slate-600">Erishilgan daraja:</span>
-                <div className={`text-base sm:text-lg ${rankColor}`}>
+                <span className="text-xs font-semibold text-slate-600 block">Erishilgan daraja:</span>
+                <div className={`text-sm sm:text-lg ${rankColor}`}>
                   {rankTitle}
                 </div>
               </div>
@@ -176,11 +176,11 @@ export default function IncomeCalculator() {
 
             {/* Step Ladder progress */}
             <div className="space-y-2">
-              <div className="flex justify-between text-xs font-bold text-slate-600">
-                <span>3% (100)</span>
-                <span>9% (600)</span>
-                <span>15% (1500)</span>
-                <span className="text-faberlic-700">23% DIREKTOR (3000+)</span>
+              <div className="flex justify-between text-[10px] sm:text-xs font-bold text-slate-600 gap-1">
+                <span>3%</span>
+                <span>9%</span>
+                <span>15%</span>
+                <span className="text-faberlic-700 font-black">23% DIREKTOR</span>
               </div>
               <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
                 <div 
@@ -193,7 +193,7 @@ export default function IncomeCalculator() {
           </div>
 
           {/* Results Box (5 cols) */}
-          <div className="lg:col-span-5 bg-gradient-to-br from-slate-900 via-rose-950 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-2xl border border-rose-900/50 space-y-6 relative overflow-hidden">
+          <div className="lg:col-span-5 bg-gradient-to-br from-slate-900 via-rose-950 to-slate-900 text-white p-5 sm:p-8 rounded-3xl shadow-2xl border border-rose-900/50 space-y-6 relative overflow-hidden w-full max-w-full">
             
             {/* Background shimmer */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-faberlic-600/20 rounded-full blur-3xl pointer-events-none"></div>

@@ -89,9 +89,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     <dialog
       ref={dialogRef}
       aria-labelledby="auth-dialog-title"
-      className="p-0 rounded-3xl shadow-2xl max-w-md w-full bg-white border border-rose-100 text-slate-800 backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm"
+      className="p-0 rounded-3xl shadow-2xl w-[calc(100%-1.5rem)] max-w-md m-auto bg-white border border-rose-100 text-slate-800 backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm overflow-hidden my-auto"
     >
-      <div className="p-6 sm:p-8 space-y-6">
+      <div className="p-5 sm:p-7 space-y-5">
         
         {/* Top Header */}
         <div className="flex items-center justify-between pb-4 border-b border-rose-100">
@@ -238,9 +238,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-faberlic-700 via-rose-600 to-pink-600 hover:from-faberlic-800 hover:to-pink-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-faberlic-600/25 flex items-center justify-center gap-2 transition disabled:opacity-50"
+              className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-faberlic-700 via-rose-600 to-pink-600 hover:from-faberlic-800 hover:to-pink-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-faberlic-600/25 flex items-center justify-center gap-2 transition disabled:opacity-50 active:scale-95"
             >
-              <span>{loading ? "Kutilmoqda..." : isLoginMode ? "Tizimga Kirish" : "Akademiya A'zosi Bo'lish (Bepul)"}</span>
+              <span>{loading ? "Kutilmoqda..." : isLoginMode ? "Tizimga Kirish" : "Ro'yxatdan O'tish (+50 ball)"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

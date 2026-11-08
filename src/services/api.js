@@ -154,7 +154,15 @@ export const api = {
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Kirishda xatolik yuz berdi');
       if (result.token) setToken(result.token);
-      if (result.user) localStorage.setItem(USER_KEY, JSON.stringify(result.user));
+      if (result.user) {
+        localStorage.setItem(USER_KEY, JSON.stringify(result.user));
+        const lUsers = getLocalUsers();
+        if (!lUsers.some(u => (u.phone && result.user.phone && u.phone.replace(/\s+/g, '') === result.user.phone.replace(/\s+/g, '')) || u.id === result.user.id)) {
+          lUsers.unshift(result.user);
+          saveLocalUsers(lUsers);
+        }
+        broadcastEvent({ type: 'REGISTER_USER', user: result.user });
+      }
       return result;
     } catch (err) {
       console.warn("Serverga ulanish xatosi, lokal hisoblar tekshirilmoqda:", err.message);
@@ -598,6 +606,13 @@ export const api = {
     }
 
     const unified = Array.from(map.values());
+    // Sort so newly registered / updated users are prioritized at the top of Admin Panel
+    unified.sort((a, b) => {
+      const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+      if (bTime !== aTime) return bTime - aTime;
+      return (b.points || 0) - (a.points || 0);
+    });
     saveLocalUsers(unified);
     return unified;
   }
