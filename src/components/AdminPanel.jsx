@@ -73,6 +73,11 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
     if (isOpen) {
       loadData();
     }
+    const handleUsersUpdate = () => {
+      loadData();
+    };
+    window.addEventListener('users_updated', handleUsersUpdate);
+    return () => window.removeEventListener('users_updated', handleUsersUpdate);
   }, [isOpen]);
 
   const loadData = async () => {
@@ -229,6 +234,98 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
     setCourses(updatedCourses);
     saveStoredCourses(updatedCourses);
     showAlert("Dars o'chirildi.");
+  };
+
+  // Delete whole module
+  const handleDeleteModule = (moduleId) => {
+    if (courses.length <= 1) {
+      alert("Kamida 1 ta modul qolishi kerak! Oxirgi modulni o'chirib bo'lmaydi.");
+      return;
+    }
+    const toDelete = courses.find(c => c.id === moduleId);
+    if (!confirm(`Rostdan ham "${toDelete?.title || 'ushbu modul'}"ni va unga tegishli barcha darslarni o'chirmoqchimisiz?`)) return;
+
+    const updated = courses.filter(c => c.id !== moduleId);
+    setCourses(updated);
+    setSelectedCourseId(updated[0].id);
+    saveStoredCourses(updated);
+    showAlert("Modul muvaffaqiyatli o'chirildi va saytdan olib tashlandi!");
+  };
+
+  // Add new module state
+  const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
+  const [newModuleForm, setNewModuleForm] = useState({
+    title: '',
+    shortDesc: '',
+    level: "Boshlang'ich",
+    duration: '2 soat',
+    color: 'from-rose-600 to-pink-600',
+    badge: 'Yangi Modul',
+    instructorName: 'Zulayho Qosimova',
+    instructorRole: 'Faberlic Oltin Direktori'
+  });
+
+  const handleCreateModule = (e) => {
+    e.preventDefault();
+    if (!newModuleForm.title.trim()) {
+      alert("Modul nomini kiriting!");
+      return;
+    }
+
+    const nextIdx = courses.length + 1;
+    const newModuleId = `modul-${Date.now()}`;
+    const newCourse = {
+      id: newModuleId,
+      title: `${nextIdx}-Modul: ${newModuleForm.title.trim()}`,
+      badge: newModuleForm.badge || 'Yangi Modul',
+      level: newModuleForm.level || 'Barcha darajalar',
+      duration: newModuleForm.duration || '2 soat',
+      lessonsCount: 1,
+      color: newModuleForm.color || 'from-rose-600 to-pink-600',
+      shortDesc: newModuleForm.shortDesc.trim() || "Faberlic bo'yicha yangi darslar to'plami.",
+      instructor: {
+        name: newModuleForm.instructorName || 'Faberlic Eksperti',
+        role: newModuleForm.instructorRole || 'Oltin Direktor',
+        image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300'
+      },
+      lessons: [
+        {
+          id: `l_${Date.now()}_1`,
+          number: 1,
+          title: "1-Dars: Kirish va asosiy tushunchalar",
+          duration: "15 daqiqa",
+          videoUrl: "",
+          overview: "Ushbu modul bo'yicha kirish darsi.",
+          notes: "### Dars konspekti:\n1. Asosiy maqsadlar va rejalar.\n2. Faberlic biznesini rivojlantirish.",
+          actionSteps: ["Dars bilan tanishib chiqing."],
+          quiz: [
+            {
+              question: "Ushbu modul darslarini qanday o'rganish kerak?",
+              options: ["Ketma-ket va muntazam", "Faqat bir marta", "Test yechmasdan", "Shoshilmasdan"],
+              correctAnswer: 0,
+              explanation: "Muntazam ravishda darslarni ko'rish va amalda qo'llash tavsiya etiladi."
+            }
+          ]
+        }
+      ]
+    };
+
+    const updated = [...courses, newCourse];
+    setCourses(updated);
+    setSelectedCourseId(newModuleId);
+    saveStoredCourses(updated);
+    setIsAddModuleOpen(false);
+    setNewModuleForm({
+      title: '',
+      shortDesc: '',
+      level: "Boshlang'ich",
+      duration: '2 soat',
+      color: 'from-rose-600 to-pink-600',
+      badge: 'Yangi Modul',
+      instructorName: 'Zulayho Qosimova',
+      instructorRole: 'Faberlic Oltin Direktori'
+    });
+    showAlert("Yangi modul muvaffaqiyatli qo'shildi!");
   };
 
   const handleResetCourses = () => {
@@ -619,11 +716,29 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={handleOpenAddLesson}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition"
+                    onClick={() => handleDeleteModule(selectedCourseId)}
+                    className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center gap-1.5 border border-rose-200 transition"
+                    title="Tanlangan modulni butunlay o'chirish"
                   >
-                    <Plus className="w-4 h-4" />
-                    <span>Yangi Dars Qo'shish</span>
+                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                    <span>Modulni O'chirish</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsAddModuleOpen(true)}
+                    className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
+                    title="Yangi modul qo'shish"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Yangi Modul</span>
+                  </button>
+
+                  <button
+                    onClick={handleOpenAddLesson}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Dars Qo'shish</span>
                   </button>
 
                   <button

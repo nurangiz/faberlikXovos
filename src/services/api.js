@@ -57,7 +57,15 @@ export const api = {
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Ro\'yxatdan o\'tishda xatolik yuz berdi');
       if (result.token) setToken(result.token);
-      if (result.user) localStorage.setItem(USER_KEY, JSON.stringify(result.user));
+      if (result.user) {
+        localStorage.setItem(USER_KEY, JSON.stringify(result.user));
+        const localUsers = getLocalUsers();
+        if (!localUsers.some(u => u.phone === result.user.phone)) {
+          localUsers.unshift(result.user);
+          saveLocalUsers(localUsers);
+        }
+        window.dispatchEvent(new Event('users_updated'));
+      }
       return result;
     } catch (err) {
       console.warn("Server ulanishida xatolik, lokal rejimda saqlanmoqda:", err.message);
@@ -80,12 +88,13 @@ export const api = {
         created_at: new Date().toISOString()
       };
 
-      localUsers.push(newUser);
+      localUsers.unshift(newUser);
       saveLocalUsers(localUsers);
 
       const fakeToken = `local_token_${newUser.id}`;
       setToken(fakeToken);
       localStorage.setItem(USER_KEY, JSON.stringify(newUser));
+      window.dispatchEvent(new Event('users_updated'));
 
       return {
         message: "Muvaffaqiyatli ro'yxatdan o'tdingiz!",
@@ -317,30 +326,108 @@ export const api = {
   // 8. Leaderboard
   async getLeaderboard() {
     const apiBase = getApiBase();
+    let serverLeaderboard = [];
     try {
       const res = await fetch(`${apiBase}/api/leaderboard`);
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.leaderboard)) {
+          serverLeaderboard = data.leaderboard;
+        }
+      }
     } catch (e) {}
 
-    // Fallback leaders
+    // Base default leaders
+    const defaultLeaders = [
+      { id: 1, name: "Zuhra Mamadaliyeva", phone: "+998 90 111 22 33", region: "Toshkent", points: 1450, streak_days: 18, completed_lessons: 14, hasCertificate: true, title: "Oltin Lider", avatar: "ZM" },
+      { id: 2, name: "Nargiza Yoqubova", phone: "+998 93 222 33 44", region: "Samarqand", points: 1250, streak_days: 14, completed_lessons: 12, hasCertificate: true, title: "Kumush Lider", avatar: "NY" },
+      { id: 3, name: "Shahnoza To'rayeva", phone: "+998 97 333 44 55", region: "Andijon", points: 1100, streak_days: 12, completed_lessons: 11, hasCertificate: true, title: "Yulduzli Ustoz", avatar: "ST" },
+      { id: 4, name: "Malika Abdullayeva", phone: "+998 91 444 55 66", region: "Buxoro", points: 950, streak_days: 9, completed_lessons: 10, hasCertificate: false, title: "Faol Mentor", avatar: "MA" },
+      { id: 5, name: "Gulbahor Ergasheva", phone: "+998 94 555 66 77", region: "Namangan", points: 850, streak_days: 8, completed_lessons: 9, hasCertificate: false, title: "Faol Mentor", avatar: "GE" }
+    ];
+
+    // Read all registered users from localStorage
+    const localUsers = getLocalUsers();
+    let currentLocalUser = null;
+    try {
+      currentLocalUser = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+    } catch (e) {}
+
+    const allMap = new Map();
+    // 1. Add server or default leaders
+    (serverLeaderboard.length > 0 ? serverLeaderboard : defaultLeaders).forEach(u => {
+      const key = u.phone || u.id || u.name;
+      allMap.set(key, u);
+    });
+
+    // 2. Add all registered users from local database
+    localUsers.forEach(u => {
+      const key = u.phone || u.id || u.name;
+      allMap.set(key, {
+        id: u.id,
+        name: u.name,
+        phone: u.phone,
+        region: u.region || 'Toshkent',
+        points: u.points || 50,
+        streak_days: u.streak_days || 1,
+        completed_lessons: u.completed_lessons || 1,
+        hasCertificate: Boolean(u.hasCertificate),
+        title: (u.points >= 1000) ? "Oltin Lider" : (u.points >= 500) ? "Faol Lider" : "Yangi O'quvchi",
+        avatar: u.name?.slice(0, 2).toUpperCase() || 'FL'
+      });
+    });
+
+    // 3. Add active user
+    if (currentLocalUser && currentLocalUser.name && !currentLocalUser.name.includes('Mehmon')) {
+      const key = currentLocalUser.phone || currentLocalUser.id || currentLocalUser.name;
+      allMap.set(key, {
+        id: currentLocalUser.id,
+        name: currentLocalUser.name,
+        phone: currentLocalUser.phone,
+        region: currentLocalUser.region || 'Toshkent',
+        points: currentLocalUser.points || 50,
+        streak_days: currentLocalUser.streak_days || 1,
+        completed_lessons: 1,
+        hasCertificate: false,
+        title: (currentLocalUser.points >= 1000) ? "Oltin Lider" : (currentLocalUser.points >= 500) ? "Faol Lider" : "Yangi O'quvchi",
+        avatar: currentLocalUser.name?.slice(0, 2).toUpperCase() || 'FL'
+      });
+    }
+
+    // Sort by points descending
+    const combined = Array.from(allMap.values()).sort((a, b) => (b.points || 0) - (a.points || 0));
+
+    // Assign rank 1, 2, 3...
+    const ranked = combined.map((user, idx) => ({
+      ...user,
+      rank: idx + 1
+    }));
+
     return {
-      leaderboard: [
-        { rank: 1, id: 1, name: "Zuhra Mamadaliyeva", region: "Toshkent", points: 1450, streak_days: 18, completed_lessons: 14, hasCertificate: true, title: "Oltin Lider", avatar: "ZM" },
-        { rank: 2, id: 2, name: "Nargiza Yoqubova", region: "Samarqand", points: 1250, streak_days: 14, completed_lessons: 12, hasCertificate: true, title: "Kumush Lider", avatar: "NY" },
-        { rank: 3, id: 3, name: "Shahnoza To'rayeva", region: "Andijon", points: 1100, streak_days: 12, completed_lessons: 11, hasCertificate: true, title: "Yulduzli Ustoz", avatar: "ST" },
-        { rank: 4, id: 4, name: "Malika Abdullayeva", region: "Buxoro", points: 950, streak_days: 9, completed_lessons: 10, hasCertificate: false, title: "Faol Mentor", avatar: "MA" },
-        { rank: 5, id: 5, name: "Gulbahor Ergasheva", region: "Namangan", points: 850, streak_days: 8, completed_lessons: 9, hasCertificate: false, title: "Faol Mentor", avatar: "GE" }
-      ]
+      leaderboard: ranked
     };
   },
 
   // 9. Stats
   async getStats() {
-    const apiBase = getApiBase();
+    const localUsers = getLocalUsers();
+    let currentLocalUser = null;
     try {
-      const res = await fetch(`${apiBase}/api/stats`);
-      if (res.ok) return await res.json();
+      currentLocalUser = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
     } catch (e) {}
-    return { totalStudents: 15410, realDbStudents: 10, totalLessonsCompleted: 35, totalCertificates: 3 };
+
+    const allMap = new Map();
+    localUsers.forEach(u => allMap.set(u.phone || u.id || u.name, u));
+    if (currentLocalUser && currentLocalUser.name && !currentLocalUser.name.includes('Mehmon')) {
+      allMap.set(currentLocalUser.phone || currentLocalUser.id || currentLocalUser.name, currentLocalUser);
+    }
+    const realCount = Math.max(6, allMap.size);
+
+    return {
+      totalStudents: 15400 + realCount,
+      realDbStudents: realCount,
+      totalLessonsCompleted: realCount * 4 + 48,
+      totalCertificates: Math.max(3, Math.floor(realCount * 0.4))
+    };
   }
 };

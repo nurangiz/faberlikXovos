@@ -22,7 +22,12 @@ export default function Leaderboard({ currentUser }) {
 
   useEffect(() => {
     fetchLeaders();
-  }, [currentUser?.points]);
+    const handleUsersUpdate = () => {
+      fetchLeaders();
+    };
+    window.addEventListener('users_updated', handleUsersUpdate);
+    return () => window.removeEventListener('users_updated', handleUsersUpdate);
+  }, [currentUser?.points, currentUser?.name]);
 
   const top1 = leaders[0] || { name: "Yuklanmoqda...", region: "Toshkent", points: 0, avatar: "FL", title: "Oltin Lider" };
   const top2 = leaders[1] || { name: "Yuklanmoqda...", region: "Samarqand", points: 0, avatar: "FL", title: "Kumush Lider" };
