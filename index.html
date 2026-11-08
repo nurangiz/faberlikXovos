@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23cf102d'/><text x='50' y='64' font-size='42' font-family='serif' font-weight='bold' fill='white' text-anchor='middle'>FL</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Faberlic Ayollar & Qizlar Akademiyasi | Bepul Biznes va Go'zallik Maktabi</title>
+    
+    <!-- Kill any rogue service workers from other apps (like qarz/savdogar daftari) -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (var reg of registrations) {
+            reg.unregister();
+            console.log('Unregistered rogue service worker:', reg);
+          }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (var name of names) {
+            caches.delete(name);
+          }
+        });
+      }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="./assets/index-D_SUvOm6.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Cmx4pKpS.css">
+  </head>
+  <body class="bg-[#FFF9FA] text-slate-800 font-sans antialiased selection:bg-faberlic-100 selection:text-faberlic-800 min-h-screen">
+    <div id="root"></div>
+  </body>
+</html>
