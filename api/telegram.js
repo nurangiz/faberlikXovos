@@ -161,7 +161,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ 
           ok: true, 
           sentToAdmin: false, 
-          message: "Admin hali @Faberlicuz_bot ga 080910 deb yozmagan." 
+          message: "Admin hali @Faberlicuz_bot ga ulanmagan." 
         });
       }
     }
@@ -192,7 +192,7 @@ export default async function handler(req, res) {
       if (data === 'admin_auth') {
         await sendTelegramMessage(
           cqChatId,
-          `🔑 <b>ADMIN TASDIQLASH:</b>\n\nIltimos, maxfiy admin parolingizni (<b>080910</b>) yuboring!`
+          `🔒 <b>ADMIN TASDIQLASH:</b>\n\nIltimos, maxfiy admin parolingizni kiriting:`
         );
       } else if (data === 'ask_question') {
         await sendTelegramMessage(
@@ -223,8 +223,8 @@ export default async function handler(req, res) {
 
       const currentAdminId = await getAdminChatId();
 
-      // 1. Check if user is sending the passcode 080910 or /admin
-      if (text.includes('080910') || text === '/admin' || text === '/start 080910') {
+      // 1. Check if user is sending the passcode 080910
+      if (text === '080910' || text === '/start 080910' || text === '/admin 080910') {
         await setAdminChatId(chatId, fullName);
         await sendTelegramMessage(
           chatId,
@@ -314,7 +314,7 @@ export default async function handler(req, res) {
                   { text: "🌐 Rasmiy Sayt", url: "https://faberlikxovos-gold.vercel.app" }
                 ],
                 [
-                  { text: "👑 Men Adminman (080910)", callback_data: "admin_auth" }
+                  { text: "👑 Men Adminman", callback_data: "admin_auth" }
                 ]
               ]
             }

@@ -5,9 +5,9 @@ export default function Hero({ onStartLearning, onOpenCalculator, onOpenExam }) 
   return (
     <section className="relative overflow-hidden pt-8 pb-16 lg:pt-14 lg:pb-24 bg-gradient-to-b from-rose-50/50 via-[#FFF9FA] to-white">
       {/* Decorative background glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-tr from-pink-200/30 via-rose-300/20 to-amber-200/30 blur-3xl -z-10 pointer-events-none rounded-full"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-96 bg-gradient-to-tr from-pink-200/30 via-rose-300/20 to-amber-200/30 blur-3xl -z-10 pointer-events-none rounded-full"></div>
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -84,8 +84,8 @@ export default function Hero({ onStartLearning, onOpenCalculator, onOpenExam }) 
           </div>
 
           {/* Right Visual Card Column */}
-          <div className="lg:col-span-5 relative">
-            <div className="relative mx-auto max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-rose-100/80">
+          <div className="lg:col-span-5 relative flex justify-center lg:justify-end">
+            <div className="relative w-full max-w-md lg:mr-0 bg-white rounded-3xl p-6 shadow-2xl border border-rose-100/80">
               
               {/* Badge top */}
               <div className="flex items-center justify-between pb-4 border-b border-rose-100">

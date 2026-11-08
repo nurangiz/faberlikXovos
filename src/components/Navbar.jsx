@@ -33,38 +33,40 @@ export default function Navbar({
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-rose-100 shadow-sm transition-all">
       {/* Top micro announcement */}
-      <div className="bg-gradient-to-r from-faberlic-700 via-rose-600 to-pink-600 text-white text-xs py-1.5 px-4 text-center font-medium flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center gap-2 mx-auto sm:mx-0">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-bold">100% BEPUL</span>
-          <span>🌸 Qizlar va Ayollar uchun Faberlic Biznes va Go'zallik Maktabi</span>
-        </div>
+      <div className="bg-gradient-to-r from-faberlic-700 via-rose-600 to-pink-600 text-white text-xs py-1.5 px-4 sm:px-6 lg:px-8 shadow-sm">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2 mx-auto sm:mx-0">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-bold">100% BEPUL</span>
+            <span>🌸 Qizlar va Ayollar uchun Faberlic Biznes va Go'zallik Maktabi</span>
+          </div>
 
-        <div className="hidden sm:flex items-center gap-4">
-          <button 
-            onClick={onOpenVerify}
-            className="flex items-center gap-1 text-[11px] font-bold text-amber-200 hover:text-white transition"
-          >
-            <ShieldCheck className="w-3.5 h-3.5" /> Sertifikatni Tekshirish
-          </button>
-          <button
-            onClick={onOpenAdmin}
-            className="flex items-center gap-1 text-[11px] font-bold text-rose-200 hover:text-white transition"
-            title="Admin Panel"
-          >
-            <Lock className="w-3 h-3 text-amber-300" /> Admin
-          </button>
-          <a 
-            href="https://t.me/Faberlicuz_bot" 
-            target="_blank" 
-            rel="noreferrer"
-            className="flex items-center gap-1 text-[11px] hover:text-amber-200 transition font-bold"
-          >
-            <Send className="w-3 h-3 text-cyan-300" /> Savol berish (@Faberlicuz_bot)
-          </a>
+          <div className="hidden sm:flex items-center gap-4">
+            <button 
+              onClick={onOpenVerify}
+              className="flex items-center gap-1 text-[11px] font-bold text-amber-200 hover:text-white transition"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" /> Sertifikatni Tekshirish
+            </button>
+            <button
+              onClick={onOpenAdmin}
+              className="flex items-center gap-1 text-[11px] font-bold text-rose-200 hover:text-white transition"
+              title="Admin Panel"
+            >
+              <Lock className="w-3 h-3 text-amber-300" /> Admin
+            </button>
+            <a 
+              href="https://t.me/Faberlicuz_bot" 
+              target="_blank" 
+              rel="noreferrer"
+              className="flex items-center gap-1 text-[11px] hover:text-amber-200 transition font-bold"
+            >
+              <Send className="w-3 h-3 text-cyan-300" /> Savol berish (@Faberlicuz_bot)
+            </a>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-2 sm:gap-4">
           
           {/* Logo */}
@@ -145,17 +147,16 @@ export default function Navbar({
                 {/* Profile modal trigger */}
                 <button
                   onClick={onOpenProfile}
-                  className="flex items-center gap-2 bg-gradient-to-r from-faberlic-600 to-rose-600 hover:from-faberlic-700 hover:to-rose-700 text-white px-3 sm:px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-faberlic-600/20 active:scale-95 transition shrink-0"
+                  className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-faberlic-600 to-rose-600 hover:from-faberlic-700 hover:to-rose-700 text-white px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-faberlic-600/20 active:scale-95 transition shrink-0 max-w-[120px] sm:max-w-[160px]"
                 >
-                  <User className="w-4 h-4" />
-                  <span className="hidden sm:inline">{user.name.split(' ')[0]}</span>
-                  <span className="sm:hidden">Kabinet</span>
+                  <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <span className="truncate">{user.name.split(' ')[0]}</span>
                 </button>
               </>
             ) : (
               <button
                 onClick={onOpenAuth}
-                className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-faberlic-700 to-rose-600 hover:from-faberlic-800 hover:to-rose-700 text-white px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-faberlic-600/20 active:scale-95 transition shrink-0"
+                className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-faberlic-700 to-rose-600 hover:from-faberlic-800 hover:to-rose-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-faberlic-600/20 active:scale-95 transition shrink-0"
               >
                 <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 <span className="sm:hidden">Kirish</span>
@@ -263,7 +264,7 @@ export default function Navbar({
                 <Lock className="w-4 h-4 text-amber-600" />
                 <span>Admin Panel</span>
               </div>
-              <span className="text-[10px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-mono font-bold">Kodi: 080910</span>
+              <span className="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-mono font-bold">Himoyalangan</span>
             </button>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { Heart, Send, Sparkles, BookOpen, Award, Phone, Lock } from 'lucide-reac
 export default function Footer({ onNavClick, onOpenAdmin }) {
   return (
     <footer className="bg-slate-950 text-white border-t border-rose-950/60 pt-16 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main Footer Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-slate-800">

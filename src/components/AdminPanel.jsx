@@ -142,7 +142,7 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
 
   const handleTestTelegram = async () => {
     if (!adminTgChatId) {
-      alert("Iltimos, avval Telegram Chat ID'ingizni kiriting yoki @Faberlicuz_bot ga /start yoki 080910 deb yozing!");
+      alert("Iltimos, avval Telegram Chat ID'ingizni kiriting yoki @Faberlicuz_bot ga kiring!");
       return;
     }
     setIsTestingTg(true);
