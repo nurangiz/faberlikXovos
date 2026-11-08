@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FINAL_EXAM_QUESTIONS } from '../data/coursesData';
+import { getStoredExamQuestions } from '../utils/examStorage';
 import { Award, CheckCircle2, XCircle, Download, Printer, Sparkles, ShieldCheck, QrCode, Search } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { api } from '../services/api';
 
 export default function CertificateExam({ user, certificates, onExamCompleted, onOpenVerifyWithId }) {
+  const [questions, setQuestions] = useState(() => getStoredExamQuestions());
   const [studentName, setStudentName] = useState(user?.name || '');
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [loading, setLoading] = useState(false);
@@ -16,6 +17,14 @@ export default function CertificateExam({ user, certificates, onExamCompleted, o
   const [error, setError] = useState(null);
 
   const certRef = useRef(null);
+
+  useEffect(() => {
+    const handleQuestionsUpdate = () => {
+      setQuestions(getStoredExamQuestions());
+    };
+    window.addEventListener('exam_questions_updated', handleQuestionsUpdate);
+    return () => window.removeEventListener('exam_questions_updated', handleQuestionsUpdate);
+  }, []);
 
   useEffect(() => {
     if (user?.name && !studentName) {
@@ -390,7 +399,7 @@ export default function CertificateExam({ user, certificates, onExamCompleted, o
             <div className="bg-white rounded-3xl border border-rose-100 shadow-xl p-6 sm:p-8 space-y-8">
               <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                 <span className="text-sm font-bold text-slate-700">
-                  Savollar: {FINAL_EXAM_QUESTIONS.length} ta
+                  Savollar: {questions.length} ta
                 </span>
                 <span className="text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-full">
                   Minimal talab: 80% (8 ta to'g'ri javob)
@@ -399,7 +408,7 @@ export default function CertificateExam({ user, certificates, onExamCompleted, o
 
               {/* Questions list */}
               <div className="space-y-8">
-                {FINAL_EXAM_QUESTIONS.map((q, idx) => (
+                {questions.map((q, idx) => (
                   <div key={q.id} className="space-y-3">
                     <h4 className="font-bold text-slate-900 text-sm sm:text-base">
                       {idx + 1}. {q.question}
@@ -436,13 +445,13 @@ export default function CertificateExam({ user, certificates, onExamCompleted, o
               <div className="pt-4 border-t border-slate-100 text-center">
                 <button
                   onClick={handleSubmitExam}
-                  disabled={loading || Object.keys(selectedAnswers).length < FINAL_EXAM_QUESTIONS.length}
+                  disabled={loading || Object.keys(selectedAnswers).length < questions.length}
                   className="px-8 py-4 rounded-2xl bg-gradient-to-r from-faberlic-700 to-rose-600 hover:from-faberlic-800 hover:to-rose-700 text-white font-bold text-sm shadow-xl shadow-faberlic-600/20 disabled:opacity-50 transition"
                 >
                   {loading ? "Tekshirilmoqda..." : "Imtihonni Yakunlash va Sertifikat Olish"}
                 </button>
                 <p className="text-[11px] text-slate-400 mt-2">
-                  Barcha 10 ta savolga javob belgilangandan keyin tugma faollashadi.
+                  Barcha savollarga javob belgilangandan keyin tugma faollashadi.
                 </p>
               </div>
 

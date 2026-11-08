@@ -7,7 +7,8 @@ import IncomeCalculator from './components/IncomeCalculator';
 import CertificateExam from './components/CertificateExam';
 import Leaderboard from './components/Leaderboard';
 import ProductsGuide from './components/ProductsGuide';
-import SuccessStories from './components/SuccessStories';
+import InstagramFeed from './components/InstagramFeed';
+import { subscribeToCloudEvents } from './utils/cloudSync';
 import UserModal from './components/UserModal';
 import VerifyModal from './components/VerifyModal';
 import CreatorModal from './components/CreatorModal';
@@ -66,6 +67,21 @@ export default function App() {
       }
     }
     loadUser();
+
+    // Subscribe to Real-Time Cloud Sync (receives user registrations from any browser/device)
+    const unsubscribe = subscribeToCloudEvents((ev) => {
+      if (ev.type === 'REGISTER_USER' || ev.type === 'UPDATE_USER') {
+        window.dispatchEvent(new Event('users_updated'));
+      }
+      if (ev.type === 'POSTS_UPDATED') {
+        window.dispatchEvent(new Event('posts_updated'));
+      }
+      if (ev.type === 'EXAM_QUESTIONS_UPDATED') {
+        window.dispatchEvent(new Event('exam_questions_updated'));
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Handle successful login/registration
@@ -182,10 +198,16 @@ export default function App() {
               userCompletedLessons={completedLessons}
             />
             <IncomeCalculator />
-            <SuccessStories />
+            <InstagramFeed onOpenAdmin={handleOpenAdmin} />
             <Leaderboard currentUser={user} />
             <ProductsGuide onOpenCreatorModal={() => setIsCreatorOpen(true)} />
           </>
+        )}
+
+        {activeTab === 'feed' && (
+          <div className="pt-4">
+            <InstagramFeed onOpenAdmin={handleOpenAdmin} />
+          </div>
         )}
 
         {activeTab === 'courses' && (

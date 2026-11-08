@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, Video, BarChart3, Plus, Trash2, Edit3, Save, RotateCcw, 
-  X, Check, LogOut, ExternalLink, Sparkles, AlertCircle, 
-  CheckCircle2, Play, Search, ShieldCheck, Film, Award, Phone, MapPin, Eye,
-  ShoppingBag, Tag, Package
+import {
+  Users, Video, BarChart3, Plus, Trash2, Edit3, Save, RotateCcw, X, Check, LogOut, ExternalLink, Sparkles, AlertCircle, CheckCircle2, Play, Search, ShieldCheck, Film, Award, Phone, MapPin, Eye, ShoppingBag, Tag, Package, Radio, FileQuestion, Mic, Volume2, CheckCircle
 } from 'lucide-react';
 import { 
   getStoredCourses, saveStoredCourses, resetStoredCourses, 
@@ -13,10 +10,38 @@ import {
   getStoredProducts, saveStoredProducts, resetStoredProducts 
 } from '../utils/productsStorage';
 import { api } from '../services/api';
+import { getStoredPosts, saveStoredPosts, resetStoredPosts } from '../utils/postsStorage';
+import { getStoredExamQuestions, saveStoredExamQuestions, resetStoredExamQuestions } from '../utils/examStorage';
+import { subscribeToCloudEvents } from '../utils/cloudSync';
 
 export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
   const [activeTab, setActiveTab] = useState('stats'); // 'stats', 'courses', 'users', 'products'
   const [courses, setCourses] = useState(() => getStoredCourses());
+
+  // Real-time Posts / Instagram Feed state
+  const [posts, setPosts] = useState(() => getStoredPosts());
+  const [isAddPostOpen, setIsAddPostOpen] = useState(false);
+  const [newPostForm, setNewPostForm] = useState({
+    title: '',
+    type: 'audio', // 'audio', 'image', 'video'
+    mediaUrl: '',
+    caption: '',
+    audioDuration: '02:30 daqiqa'
+  });
+
+  // Dynamic Exam Questions state (Admin can edit any question)
+  const [examQuestions, setExamQuestions] = useState(() => getStoredExamQuestions());
+  const [editingQuestion, setEditingQuestion] = useState(null); // { isNew, question }
+  const [questionForm, setQuestionForm] = useState({
+    id: 1,
+    question: '',
+    optionA: '',
+    optionB: '',
+    optionC: '',
+    optionD: '',
+    correctIndex: 0,
+    explanation: ''
+  });
   const [selectedCourseId, setSelectedCourseId] = useState(courses[0]?.id || 'biznes-boshlash');
   
   // Real / local users state
@@ -76,8 +101,34 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
     const handleUsersUpdate = () => {
       loadData();
     };
+    const handlePostsUpdate = () => {
+      setPosts(getStoredPosts());
+    };
+    const handleExamUpdate = () => {
+      setExamQuestions(getStoredExamQuestions());
+    };
     window.addEventListener('users_updated', handleUsersUpdate);
-    return () => window.removeEventListener('users_updated', handleUsersUpdate);
+    window.addEventListener('posts_updated', handlePostsUpdate);
+    window.addEventListener('exam_questions_updated', handleExamUpdate);
+
+    // Live cloud listener for instant multi-device sync
+    const unsubscribeCloud = subscribeToCloudEvents((ev) => {
+      if (ev.type === 'REGISTER_USER' || ev.type === 'UPDATE_USER') {
+        loadData();
+      }
+      if (ev.type === 'POSTS_UPDATED') {
+        setPosts(getStoredPosts());
+      }
+      if (ev.type === 'EXAM_QUESTIONS_UPDATED') {
+        setExamQuestions(getStoredExamQuestions());
+      }
+    });
+    return () => {
+      window.removeEventListener('users_updated', handleUsersUpdate);
+      window.removeEventListener('posts_updated', handlePostsUpdate);
+      window.removeEventListener('exam_questions_updated', handleExamUpdate);
+      unsubscribeCloud();
+    };
   }, [isOpen]);
 
   const loadData = async () => {
@@ -363,6 +414,144 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
     showAlert("Yangi o'quvchi muvaffaqiyatli qo'shildi!");
   };
 
+  // ==================== POSTS & STORIES (INSTAGRAM FEED) HANDLERS ====================
+  const handleCreatePost = (e) => {
+    e.preventDefault();
+    if (!newPostForm.title.trim() || !newPostForm.mediaUrl.trim()) {
+      alert("Iltimos, sarlavha va media havolasini (URL) kiriting!");
+      return;
+    }
+
+    const newPost = {
+      id: `post-${Date.now()}`,
+      authorName: 'NURULLAYEVA NURANGIZ',
+      authorRole: 'Faberlic Oltin Direktori & Asoschisi',
+      authorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200',
+      type: newPostForm.type,
+      title: newPostForm.title.trim(),
+      mediaUrl: newPostForm.mediaUrl.trim(),
+      audioDuration: newPostForm.audioDuration || '02:30 daqiqa',
+      caption: newPostForm.caption.trim() || 'Faberlic Akademiya rasmiy murojaati.',
+      likesCount: Math.floor(80 + Math.random() * 150),
+      commentsCount: Math.floor(10 + Math.random() * 30),
+      createdAt: 'Hozirgina'
+    };
+
+    const updated = [newPost, ...posts];
+    setPosts(updated);
+    saveStoredPosts(updated);
+    setIsAddPostOpen(false);
+    setNewPostForm({ title: '', type: 'audio', mediaUrl: '', caption: '', audioDuration: '02:30 daqiqa' });
+    showAlert("Yangi ovozli xabar / post muvaffaqiyatli chop etildi!");
+  };
+
+  const handleDeletePost = (postId) => {
+    if (!confirm("Ushbu postni o'chirib tashlamoqchimisiz?")) return;
+    const updated = posts.filter(p => p.id !== postId);
+    setPosts(updated);
+    saveStoredPosts(updated);
+    showAlert("Post o'chirildi.");
+  };
+
+  const handleResetPosts = () => {
+    if (!confirm("Barcha postlarni dastlabki holatga qaytarmoqchimisiz?")) return;
+    const def = resetStoredPosts();
+    setPosts(def);
+    showAlert("Postlar dastlabki holatga qaytarildi.");
+  };
+
+  // ==================== EXAM QUESTIONS HANDLERS (ADMIN CAN EDIT) ====================
+  const handleOpenEditQuestion = (q, isNew = false) => {
+    setEditingQuestion({ isNew, qId: q ? q.id : null });
+    if (q) {
+      setQuestionForm({
+        id: q.id,
+        question: q.question,
+        optionA: q.options[0] || '',
+        optionB: q.options[1] || '',
+        optionC: q.options[2] || '',
+        optionD: q.options[3] || '',
+        correctIndex: q.correctIndex ?? 0,
+        explanation: q.explanation || ''
+      });
+    } else {
+      setQuestionForm({
+        id: Date.now(),
+        question: '',
+        optionA: '',
+        optionB: '',
+        optionC: '',
+        optionD: '',
+        correctIndex: 0,
+        explanation: ''
+      });
+    }
+  };
+
+  const handleSaveQuestion = (e) => {
+    e.preventDefault();
+    if (!questionForm.question.trim() || !questionForm.optionA.trim() || !questionForm.optionB.trim()) {
+      alert("Savol matni va kamida 2 ta variantni to'ldiring!");
+      return;
+    }
+
+    const options = [
+      questionForm.optionA.trim(),
+      questionForm.optionB.trim(),
+      questionForm.optionC.trim() || '—',
+      questionForm.optionD.trim() || '—'
+    ];
+
+    let updated;
+    if (editingQuestion.isNew) {
+      const newQ = {
+        id: examQuestions.length + 1,
+        question: questionForm.question.trim(),
+        options,
+        correctIndex: Number(questionForm.correctIndex) || 0,
+        explanation: questionForm.explanation.trim()
+      };
+      updated = [...examQuestions, newQ];
+    } else {
+      updated = examQuestions.map(q => {
+        if (q.id === editingQuestion.qId) {
+          return {
+            ...q,
+            question: questionForm.question.trim(),
+            options,
+            correctIndex: Number(questionForm.correctIndex) || 0,
+            explanation: questionForm.explanation.trim()
+          };
+        }
+        return q;
+      });
+    }
+
+    setExamQuestions(updated);
+    saveStoredExamQuestions(updated);
+    setEditingQuestion(null);
+    showAlert("Imtihon savoli muvaffaqiyatli saqlandi!");
+  };
+
+  const handleDeleteQuestion = (qId) => {
+    if (examQuestions.length <= 1) {
+      alert("Kamida 1 ta savol qolishi kerak!");
+      return;
+    }
+    if (!confirm("Ushbu savolni o'chirmoqchimisiz?")) return;
+    const updated = examQuestions.filter(q => q.id !== qId).map((q, idx) => ({ ...q, id: idx + 1 }));
+    setExamQuestions(updated);
+    saveStoredExamQuestions(updated);
+    showAlert("Savol o'chirildi.");
+  };
+
+  const handleResetExamQuestions = () => {
+    if (!confirm("Imtihon savollarini standart 10 ta savolga qaytarmoqchimisiz?")) return;
+    const def = resetStoredExamQuestions();
+    setExamQuestions(def);
+    showAlert("Savollar dastlabki 10 ta holatga qaytarildi.");
+  };
+
   // Products Handlers
   const handleAddNewProduct = () => {
     setEditingProduct({ isNew: true });
@@ -572,6 +761,30 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
           >
             <ShoppingBag className="w-4 h-4" />
             <span>Mahsulotlar & Parfyumeriya ({products.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('posts')}
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition ${
+              activeTab === 'posts'
+                ? 'bg-faberlic-700 text-white shadow-md shadow-faberlic-700/20'
+                : 'bg-white text-slate-700 hover:bg-rose-50 border border-slate-200'
+            }`}
+          >
+            <Radio className="w-4 h-4 text-rose-500 animate-pulse" />
+            <span>Lenta & Ovozli Xabarlar ({posts.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('exam')}
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition ${
+              activeTab === 'exam'
+                ? 'bg-faberlic-700 text-white shadow-md shadow-faberlic-700/20'
+                : 'bg-white text-slate-700 hover:bg-rose-50 border border-slate-200'
+            }`}
+          >
+            <FileQuestion className="w-4 h-4" />
+            <span>Imtihon Savollari ({examQuestions.length})</span>
           </button>
         </div>
 
@@ -1097,6 +1310,221 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
             </div>
           )}
 
+          {/* ===================== TAB 5: LENTA & OVOZLI XABARLAR (INSTAGRAM STYLE) ===================== */}
+          {activeTab === 'posts' && (
+            <div className="space-y-6 animate-in fade-in">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-serif font-black text-xl text-slate-900 flex items-center gap-2">
+                    <Radio className="w-5 h-5 text-faberlic-700 animate-pulse" />
+                    <span>Lenta, Ovozli Xabarlar & Stories</span>
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Admin sifatida o'quvchilarga audio murojaatlar, rasmlar va videolarni chop eting
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleResetPosts}
+                    className="px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-600 transition"
+                  >
+                    Standartga Qaytarish
+                  </button>
+                  <button
+                    onClick={() => setIsAddPostOpen(true)}
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-faberlic-700 to-rose-600 hover:from-faberlic-800 hover:to-rose-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-faberlic-700/20 flex items-center gap-2 transition"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Yangi Post / Ovozli Xabar</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Feed Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {posts.map((post) => (
+                  <div 
+                    key={post.id}
+                    className="bg-white rounded-2xl border border-rose-100 p-5 shadow-sm hover:shadow-md transition space-y-4 flex flex-col justify-between"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1 ${
+                            post.type === 'audio' 
+                              ? 'bg-emerald-100 text-emerald-800' 
+                              : post.type === 'video' 
+                                ? 'bg-purple-100 text-purple-800' 
+                                : 'bg-rose-100 text-rose-800'
+                          }`}>
+                            {post.type === 'audio' ? <Mic className="w-3 h-3" /> : post.type === 'video' ? <Film className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
+                            {post.type === 'audio' ? 'Ovozli Xabar' : post.type === 'video' ? 'Video Post' : 'Rasm / Motivatsiya'}
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-medium">{post.createdAt || 'Yangi'}</span>
+                        </div>
+                        <button
+                          onClick={() => handleDeletePost(post.id)}
+                          className="w-7 h-7 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 flex items-center justify-center transition"
+                          title="Postni o'chirish"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <h4 className="font-bold text-slate-900 text-base line-clamp-2">
+                        {post.title}
+                      </h4>
+
+                      <p className="text-xs text-slate-600 line-clamp-3">
+                        {post.caption}
+                      </p>
+
+                      {/* Post media preview */}
+                      {post.type === 'image' && (
+                        <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
+                          <img src={post.mediaUrl} alt={post.title} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+
+                      {post.type === 'audio' && (
+                        <div className="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-sm">
+                            <Volume2 className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-bold text-emerald-950 block truncate">Audio fayl</span>
+                            <span className="text-[10px] text-emerald-700 font-semibold">{post.audioDuration || '02:30 daqiqa'}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {post.type === 'video' && (
+                        <div className="p-3 rounded-xl bg-purple-50/80 border border-purple-200 flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-sm">
+                            <Film className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-bold text-purple-950 block truncate">Video havola</span>
+                            <span className="text-[10px] text-purple-700 font-semibold truncate block">{post.mediaUrl}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-semibold">
+                      <span>❤️ {post.likesCount || 0} ta yoqdi</span>
+                      <span>💬 {post.commentsCount || 0} ta fikr</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ===================== TAB 6: IMTIHON SAVOLLARI (ADMIN EDITABLE) ===================== */}
+          {activeTab === 'exam' && (
+            <div className="space-y-6 animate-in fade-in">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-serif font-black text-xl text-slate-900 flex items-center gap-2">
+                    <FileQuestion className="w-5 h-5 text-faberlic-700" />
+                    <span>Sertifikat Imtihon Savollari ({examQuestions.length} ta)</span>
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    O'quvchilar sertifikat olish uchun topshiradigan test savollari va to'g'ri javoblarini boshqaring
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleResetExamQuestions}
+                    className="px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-600 transition"
+                  >
+                    Standart 10 taga Qaytarish
+                  </button>
+                  <button
+                    onClick={() => handleOpenEditQuestion(null, true)}
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-faberlic-700 to-rose-600 hover:from-faberlic-800 hover:to-rose-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-faberlic-700/20 flex items-center gap-2 transition"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Yangi Savol Qo'shish</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Questions List */}
+              <div className="space-y-4">
+                {examQuestions.map((q, idx) => (
+                  <div 
+                    key={q.id || idx}
+                    className="p-5 rounded-2xl bg-white border border-rose-100 shadow-sm space-y-3 hover:border-rose-300 transition"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <span className="w-7 h-7 rounded-xl bg-faberlic-100 text-faberlic-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                          #{idx + 1}
+                        </span>
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm sm:text-base leading-snug">
+                            {q.question}
+                          </h4>
+                          {q.explanation && (
+                            <p className="text-xs text-slate-500 mt-1 italic">
+                              Izoh: {q.explanation}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => handleOpenEditQuestion(q, false)}
+                          className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-faberlic-700 text-xs font-bold flex items-center gap-1 transition"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Tahrirlash</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteQuestion(q.id)}
+                          className="w-8 h-8 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 flex items-center justify-center transition"
+                          title="Savolni o'chirish"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Options list */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                      {q.options.map((opt, optIdx) => {
+                        const isCorrect = (q.correctIndex ?? 0) === optIdx;
+                        return (
+                          <div 
+                            key={optIdx}
+                            className={`p-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                              isCorrect 
+                                ? 'bg-emerald-50 text-emerald-900 border border-emerald-300 font-bold' 
+                                : 'bg-slate-50 text-slate-700 border border-slate-200'
+                            }`}
+                          >
+                            <span className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center shrink-0 font-bold ${
+                              isCorrect ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
+                            }`}>
+                              {String.fromCharCode(65 + optIdx)}
+                            </span>
+                            <span className="flex-1 truncate">{opt}</span>
+                            {isCorrect && (
+                              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
 
       </div>
@@ -1484,6 +1912,317 @@ export default function AdminPanel({ isOpen, onClose, onLogoutAdmin }) {
         </div>
       )}
 
+
+      {/* ===================== ADD NEW POST / AUDIO / STORY MODAL ===================== */}
+      {isAddPostOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in"
+          onClick={() => setIsAddPostOpen(false)}
+        >
+          <div 
+            className="w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-rose-100 space-y-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Radio className="w-5 h-5 text-faberlic-700 animate-pulse" />
+                <h3 className="font-serif font-black text-xl text-slate-900">
+                  Yangi Ovozli Xabar / Post Joylash
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsAddPostOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-rose-50 hover:text-faberlic-700 flex items-center justify-center text-slate-500"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreatePost} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Post Turi:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewPostForm({ ...newPostForm, type: 'audio' })}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-bold flex flex-col items-center gap-1 border transition ${
+                      newPostForm.type === 'audio'
+                        ? 'bg-emerald-500 text-white border-emerald-500 shadow-md'
+                        : 'bg-slate-50 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    <Mic className="w-4 h-4" />
+                    <span>Ovozli Xabar</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewPostForm({ ...newPostForm, type: 'image' })}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-bold flex flex-col items-center gap-1 border transition ${
+                      newPostForm.type === 'image'
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-md'
+                        : 'bg-slate-50 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Rasm / Foto</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewPostForm({ ...newPostForm, type: 'video' })}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-bold flex flex-col items-center gap-1 border transition ${
+                      newPostForm.type === 'video'
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-md'
+                        : 'bg-slate-50 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    <Film className="w-4 h-4" />
+                    <span>Video Post</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Sarlavha:
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Masalan: Aziz opa-singillar, bugungi yangiliklar va maslahatlar!"
+                  value={newPostForm.title}
+                  onChange={(e) => setNewPostForm({ ...newPostForm, title: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  {newPostForm.type === 'audio' ? 'Audio Fayl Havolasi (URL):' : newPostForm.type === 'image' ? 'Rasm Havolasi (URL):' : 'Video Havolasi (YouTube yoki MP4):'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder={
+                    newPostForm.type === 'audio' 
+                      ? 'https://example.com/audio.mp3 yoki ovozli xabar havolasi' 
+                      : newPostForm.type === 'image'
+                        ? 'https://images.unsplash.com/...' 
+                        : 'https://youtube.com/watch?v=...'
+                  }
+                  value={newPostForm.mediaUrl}
+                  onChange={(e) => setNewPostForm({ ...newPostForm, mediaUrl: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                />
+              </div>
+
+              {newPostForm.type === 'audio' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Audio Davomiyligi:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Masalan: 02:45 daqiqa"
+                    value={newPostForm.audioDuration}
+                    onChange={(e) => setNewPostForm({ ...newPostForm, audioDuration: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Matn / Izoh (Caption):
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Post matni, o'quvchilarga bildirishnoma yoki eslatma..."
+                  value={newPostForm.caption}
+                  onChange={(e) => setNewPostForm({ ...newPostForm, caption: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                ></textarea>
+              </div>
+
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddPostOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-faberlic-700 hover:bg-faberlic-800 text-white text-xs font-bold shadow-md shadow-faberlic-700/20"
+                >
+                  Chop Etish
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== EDIT / ADD EXAM QUESTION MODAL ===================== */}
+      {editingQuestion && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in"
+          onClick={() => setEditingQuestion(null)}
+        >
+          <div 
+            className="w-full max-w-xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-rose-100 space-y-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <FileQuestion className="w-5 h-5 text-faberlic-700" />
+                <h3 className="font-serif font-black text-xl text-slate-900">
+                  {editingQuestion.isNew ? "Yangi Imtihon Savoli Qo'shish" : "Savolni Tahrirlash"}
+                </h3>
+              </div>
+              <button
+                onClick={() => setEditingQuestion(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-rose-50 hover:text-faberlic-700 flex items-center justify-center text-slate-500"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveQuestion} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Savol Matni:
+                </label>
+                <textarea
+                  rows={2}
+                  required
+                  placeholder="Masalan: Faberlic katalogidagi mahsulotlarga maslahatchi necha foiz chegirma oladi?"
+                  value={questionForm.question}
+                  onChange={(e) => setQuestionForm({ ...questionForm, question: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-faberlic-600"
+                ></textarea>
+              </div>
+
+              <div className="space-y-2.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase">
+                  Variantlar & To'g'ri Javobni Tanlang:
+                </label>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="correctIndex"
+                    checked={Number(questionForm.correctIndex) === 0}
+                    onChange={() => setQuestionForm({ ...questionForm, correctIndex: 0 })}
+                    className="w-4 h-4 accent-emerald-600 cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-slate-500 w-5">A:</span>
+                  <input
+                    type="text"
+                    required
+                    placeholder="A variant matni"
+                    value={questionForm.optionA}
+                    onChange={(e) => setQuestionForm({ ...questionForm, optionA: e.target.value })}
+                    className="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-faberlic-600"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="correctIndex"
+                    checked={Number(questionForm.correctIndex) === 1}
+                    onChange={() => setQuestionForm({ ...questionForm, correctIndex: 1 })}
+                    className="w-4 h-4 accent-emerald-600 cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-slate-500 w-5">B:</span>
+                  <input
+                    type="text"
+                    required
+                    placeholder="B variant matni"
+                    value={questionForm.optionB}
+                    onChange={(e) => setQuestionForm({ ...questionForm, optionB: e.target.value })}
+                    className="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-faberlic-600"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="correctIndex"
+                    checked={Number(questionForm.correctIndex) === 2}
+                    onChange={() => setQuestionForm({ ...questionForm, correctIndex: 2 })}
+                    className="w-4 h-4 accent-emerald-600 cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-slate-500 w-5">C:</span>
+                  <input
+                    type="text"
+                    placeholder="C variant matni"
+                    value={questionForm.optionC}
+                    onChange={(e) => setQuestionForm({ ...questionForm, optionC: e.target.value })}
+                    className="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-faberlic-600"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="correctIndex"
+                    checked={Number(questionForm.correctIndex) === 3}
+                    onChange={() => setQuestionForm({ ...questionForm, correctIndex: 3 })}
+                    className="w-4 h-4 accent-emerald-600 cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-slate-500 w-5">D:</span>
+                  <input
+                    type="text"
+                    placeholder="D variant matni"
+                    value={questionForm.optionD}
+                    onChange={(e) => setQuestionForm({ ...questionForm, optionD: e.target.value })}
+                    className="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-faberlic-600"
+                  />
+                </div>
+                <span className="text-[11px] text-emerald-700 font-semibold block">
+                  * To'g'ri javob variantini radio tugma orqali belgilang.
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Savol Izohi / Tushuntirish (Ixtiyoriy):
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nima uchun shu javob to'g'riligi haqida qisqacha izoh..."
+                  value={questionForm.explanation}
+                  onChange={(e) => setQuestionForm({ ...questionForm, explanation: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-faberlic-600"
+                />
+              </div>
+
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingQuestion(null)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-faberlic-700 hover:bg-faberlic-800 text-white text-xs font-bold shadow-md shadow-faberlic-700/20 flex items-center gap-1.5"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Savolni Saqlash</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

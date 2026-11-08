@@ -36,7 +36,7 @@ export default function Hero({ onStartLearning, onOpenCalculator, onOpenExam }) 
               </div>
               <div className="flex items-center gap-2.5 text-xs sm:text-sm font-medium text-slate-700">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>20-26% keshbek va kafolatlangan sovg'alar</span>
+                <span>Professional go'zallik va parvarish sirlari</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs sm:text-sm font-medium text-slate-700">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -44,7 +44,7 @@ export default function Hero({ onStartLearning, onOpenCalculator, onOpenExam }) 
               </div>
               <div className="flex items-center gap-2.5 text-xs sm:text-sm font-medium text-slate-700">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>19,000,000 so'm Direktorlik bonusi</span>
+                <span>Zamonaviy onlayn biznes metodikasi</span>
               </div>
             </div>
 

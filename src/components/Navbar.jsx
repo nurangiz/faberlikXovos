@@ -17,6 +17,7 @@ export default function Navbar({
   const navItems = [
     { id: 'courses', label: 'Barcha Kurslar', icon: BookOpen },
     { id: 'classroom', label: 'Darslar Xonasi', icon: Sparkles, badge: 'LMS' },
+    { id: 'feed', label: 'Lenta & Ovozli Xabarlar', icon: Sparkles, badge: 'Yangi' },
     { id: 'calculator', label: 'Daromad Kalkulyatori', icon: Calculator },
     { id: 'certificate', label: 'Sertifikat Olish', icon: Award, highlight: true },
     { id: 'ranking', label: 'Liderlar Reytingi', icon: Trophy },

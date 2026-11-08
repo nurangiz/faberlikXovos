@@ -1,3 +1,6 @@
+import { broadcastEvent, fetchCloudEvents } from '../utils/cloudSync';
+import { getStoredExamQuestions } from '../utils/examStorage';
+
 const TOKEN_KEY = 'faberlic_auth_token';
 const USER_KEY = 'faberlic_local_user';
 const USERS_DB_KEY = 'faberlic_users_db';
@@ -89,6 +92,10 @@ export const api = {
     const fakeToken = `local_token_${registeredUser.id}`;
     setToken(fakeToken);
     window.dispatchEvent(new Event('users_updated'));
+    if (updatedUser) {
+      broadcastEvent({ type: 'UPDATE_USER', user: updatedUser });
+    }
+    broadcastEvent({ type: 'REGISTER_USER', user: registeredUser });
 
     // Optional server sync if API is alive
     const apiBase = getApiBase();
@@ -114,6 +121,9 @@ export const api = {
               saveLocalUsers(localUsers);
             }
             window.dispatchEvent(new Event('users_updated'));
+    if (updatedUser) {
+      broadcastEvent({ type: 'UPDATE_USER', user: updatedUser });
+    }
           }
         }
       } catch (err) {
@@ -243,6 +253,9 @@ export const api = {
     } catch (e) {}
 
     window.dispatchEvent(new Event('users_updated'));
+    if (updatedUser) {
+      broadcastEvent({ type: 'UPDATE_USER', user: updatedUser });
+    }
 
     const apiBase = getApiBase();
     if (apiBase) {
@@ -258,6 +271,9 @@ export const api = {
             updatedUser = { ...updatedUser, ...result.user, region: cleanRegion };
             localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
             window.dispatchEvent(new Event('users_updated'));
+    if (updatedUser) {
+      broadcastEvent({ type: 'UPDATE_USER', user: updatedUser });
+    }
           }
         }
       } catch (err) {}
@@ -312,13 +328,14 @@ export const api = {
       if (result.user) localStorage.setItem(USER_KEY, JSON.stringify(result.user));
       return result;
     } catch (err) {
-      // Local fallback calculation
-      const keys = { 1: 2, 2: 0, 3: 2, 4: 3, 5: 2, 6: 1, 7: 1, 8: 1, 9: 0, 10: 0 };
+      // Dynamic questions grading (configured by admin)
+      const storedQuestions = getStoredExamQuestions();
       let correct = 0;
-      for (const [k, v] of Object.entries(keys)) {
-        if (answers[k] === v) correct++;
-      }
-      const score = Math.round((correct / 10) * 100);
+      storedQuestions.forEach(q => {
+        if (answers[q.id] === q.correctIndex) correct++;
+      });
+      const totalCount = storedQuestions.length || 10;
+      const score = Math.round((correct / totalCount) * 100);
       const passed = score >= 80;
       const certId = `FL-UZ-2026-${Math.floor(100000 + Math.random() * 900000)}`;
 
@@ -328,12 +345,14 @@ export const api = {
         updatedUser = JSON.parse(cached);
         if (passed) updatedUser.points = (updatedUser.points || 0) + 200;
         localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event('users_updated'));
+        broadcastEvent({ type: 'UPDATE_USER', user: updatedUser });
       }
 
       return {
         score,
         correctCount: correct,
-        totalQuestions: 10,
+        totalQuestions: totalCount,
         passed,
         certificateId: certId,
         pointsAdded: passed ? 200 : 0,
@@ -425,7 +444,7 @@ export const api = {
 
     // 2. Add all registered users from local database
     localUsers.forEach(u => {
-      const key = u.phone || u.id || u.name;
+      const key = (u.phone ? u.phone.replace(/\s+/g, '') : null) || String(u.id);
       allMap.set(key, {
         id: u.id,
         name: u.name,
@@ -439,6 +458,29 @@ export const api = {
         avatar: u.name?.slice(0, 2).toUpperCase() || 'FL'
       });
     });
+
+    // 2b. Add real-time cloud sync users (from other browsers / profiles)
+    try {
+      const cloudEvents = await fetchCloudEvents();
+      cloudEvents.forEach(ev => {
+        if ((ev.type === 'REGISTER_USER' || ev.type === 'UPDATE_USER') && ev.user) {
+          const u = ev.user;
+          const key = (u.phone ? u.phone.replace(/\s+/g, '') : null) || String(u.id);
+          allMap.set(key, {
+            id: u.id,
+            name: u.name,
+            phone: u.phone,
+            region: u.region || 'Toshkent',
+            points: u.points || 50,
+            streak_days: u.streak_days || 1,
+            completed_lessons: 1,
+            hasCertificate: Boolean(u.hasCertificate),
+            title: (u.points >= 1000) ? "Oltin Lider" : (u.points >= 500) ? "Faol Lider" : "Yangi O'quvchi",
+            avatar: u.name?.slice(0, 2).toUpperCase() || 'FL'
+          });
+        }
+      });
+    } catch(e) {}
 
     // 3. Add active user
     if (currentLocalUser && currentLocalUser.name && !currentLocalUser.name.includes('Mehmon')) {
@@ -533,6 +575,19 @@ export const api = {
       const key = (u.phone ? u.phone.replace(/\s+/g, '') : null) || String(u.id);
       map.set(key, u);
     });
+
+    // 3b. Cloud broadcasted users (across all browsers, profiles, and devices)
+    try {
+      const cloudEvents = await fetchCloudEvents();
+      cloudEvents.forEach(ev => {
+        if ((ev.type === 'REGISTER_USER' || ev.type === 'UPDATE_USER') && ev.user) {
+          const u = ev.user;
+          const key = (u.phone ? u.phone.replace(/\s+/g, '') : null) || String(u.id);
+          const existing = map.get(key) || {};
+          map.set(key, { ...existing, ...u });
+        }
+      });
+    } catch(e) {}
     // 4. Current session user
     if (currentLocalUser && currentLocalUser.name && !currentLocalUser.name.includes('Mehmon')) {
       const key = (currentLocalUser.phone ? currentLocalUser.phone.replace(/\s+/g, '') : null) || String(currentLocalUser.id);
