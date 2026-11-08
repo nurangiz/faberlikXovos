@@ -152,7 +152,7 @@ export default function LessonRoom({
 
   return (
     <div className="py-8 bg-[#FFF9FA] min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Course selector tabs */}
         <div className="mb-6 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">

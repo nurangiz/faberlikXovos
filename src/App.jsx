@@ -3,7 +3,6 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import CoursesSection from './components/CoursesSection';
 import LessonRoom from './components/LessonRoom';
-import IncomeCalculator from './components/IncomeCalculator';
 import CertificateExam from './components/CertificateExam';
 import Leaderboard from './components/Leaderboard';
 import ProductsGuide from './components/ProductsGuide';
@@ -181,11 +180,7 @@ export default function App() {
           <>
             <Hero
               onStartLearning={() => {
-                setActiveTab('classroom');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              onOpenCalculator={() => {
-                setActiveTab('calculator');
+                setActiveTab('courses');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               onOpenExam={() => {
@@ -197,8 +192,7 @@ export default function App() {
               onSelectCourse={handleSelectCourse}
               userCompletedLessons={completedLessons}
             />
-            <IncomeCalculator />
-            <InstagramFeed onOpenAdmin={handleOpenAdmin} />
+            <InstagramFeed currentUser={user} onOpenAdmin={handleOpenAdmin} />
             <Leaderboard currentUser={user} />
             <ProductsGuide onOpenCreatorModal={() => setIsCreatorOpen(true)} />
           </>
@@ -206,7 +200,7 @@ export default function App() {
 
         {activeTab === 'feed' && (
           <div className="pt-4">
-            <InstagramFeed onOpenAdmin={handleOpenAdmin} />
+            <InstagramFeed currentUser={user} onOpenAdmin={handleOpenAdmin} />
           </div>
         )}
 
@@ -230,10 +224,6 @@ export default function App() {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           />
-        )}
-
-        {activeTab === 'calculator' && (
-          <IncomeCalculator />
         )}
 
         {activeTab === 'certificate' && (

@@ -4,7 +4,7 @@ import { Heart, Send, Sparkles, BookOpen, Award, Phone, Lock } from 'lucide-reac
 export default function Footer({ onNavClick, onOpenAdmin }) {
   return (
     <footer className="bg-slate-950 text-white border-t border-rose-950/60 pt-16 pb-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main Footer Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-slate-800">
@@ -76,8 +76,8 @@ export default function Footer({ onNavClick, onOpenAdmin }) {
             </h4>
             <ul className="space-y-2 text-xs text-slate-400">
               <li>
-                <button onClick={() => onNavClick('calculator')} className="hover:text-white transition">
-                  • Marketing Reja & Daromad Kalkulyatori
+                <button onClick={() => onNavClick('feed')} className="hover:text-white transition">
+                  • Direktor Ovozli Lenta & Xabarlar
                 </button>
               </li>
               <li>

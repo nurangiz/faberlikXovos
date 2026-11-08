@@ -1,13 +1,13 @@
 import React from 'react';
-import { Sparkles, Play, Award, Calculator, CheckCircle2, TrendingUp, Users, Heart, ArrowRight } from 'lucide-react';
+import { Sparkles, Play, Award, CheckCircle2, TrendingUp, Users, Heart, ArrowRight } from 'lucide-react';
 
-export default function Hero({ onStartLearning, onOpenCalculator, onOpenExam }) {
+export default function Hero({ onStartLearning, onOpenExam }) {
   return (
     <section className="relative overflow-hidden pt-8 pb-16 lg:pt-14 lg:pb-24 bg-gradient-to-b from-rose-50/50 via-[#FFF9FA] to-white">
       {/* Decorative background glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-96 bg-gradient-to-tr from-pink-200/30 via-rose-300/20 to-amber-200/30 blur-3xl -z-10 pointer-events-none rounded-full"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-96 bg-gradient-to-tr from-pink-200/30 via-rose-300/20 to-amber-200/30 blur-3xl -z-10 pointer-events-none rounded-full"></div>
       
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -60,11 +60,11 @@ export default function Hero({ onStartLearning, onOpenCalculator, onOpenExam }) 
               </button>
 
               <button
-                onClick={onOpenCalculator}
+                onClick={onOpenExam}
                 className="w-full sm:w-auto px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-white hover:bg-rose-50/70 border border-rose-200 text-faberlic-800 font-bold text-sm sm:text-base shadow-sm flex items-center justify-center gap-2 transition"
               >
-                <Calculator className="w-4 h-4 sm:w-5 sm:h-5 text-faberlic-700 shrink-0" />
-                <span>Daromadni Hisoblash</span>
+                <Award className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" />
+                <span>Sertifikat Olish</span>
               </button>
             </div>
 

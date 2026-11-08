@@ -4,15 +4,19 @@ import {
   Sparkles, CheckCircle2, Film, Image as ImageIcon, Mic, Share2, 
   ExternalLink, Plus, RefreshCw, Music
 } from 'lucide-react';
-import { getStoredPosts } from '../utils/postsStorage';
+import { getStoredPosts, addCommentToPost } from '../utils/postsStorage';
 
-export default function InstagramFeed({ onOpenAdmin }) {
+export default function InstagramFeed({ currentUser, onOpenAdmin }) {
   const [posts, setPosts] = useState(() => getStoredPosts());
   const [activeAudioPostId, setActiveAudioPostId] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
   const [likesMap, setLikesMap] = useState({});
   const [likedPosts, setLikedPosts] = useState({});
+  const [commentInputs, setCommentInputs] = useState({});
+  const [guestNames, setGuestNames] = useState({});
+  const [showAllComments, setShowAllComments] = useState({});
+  const [commentLikes, setCommentLikes] = useState({});
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -45,6 +49,25 @@ export default function InstagramFeed({ onOpenAdmin }) {
       }));
       return { ...prev, [postId]: isLiked };
     });
+  };
+
+  const handleAddComment = (e, postId) => {
+    e.preventDefault();
+    const text = (commentInputs[postId] || '').trim();
+    if (!text) return;
+
+    let authorName = '';
+    if (currentUser && currentUser.name && !currentUser.name.includes('Mehmon')) {
+      authorName = currentUser.name;
+    } else {
+      authorName = (guestNames[postId] || '').trim() || "Faberlic O'quvchisi";
+    }
+
+    addCommentToPost(postId, { authorName, text });
+
+    setCommentInputs(prev => ({ ...prev, [postId]: '' }));
+    setPosts(getStoredPosts());
+    setShowAllComments(prev => ({ ...prev, [postId]: true }));
   };
 
   const stories = [
@@ -274,9 +297,12 @@ export default function InstagramFeed({ onOpenAdmin }) {
                         <span>{currentLikes} ta</span>
                       </button>
 
-                      <button className="flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-rose-600 transition">
+                      <button 
+                        onClick={() => setShowAllComments(prev => ({ ...prev, [post.id]: !prev[post.id] }))}
+                        className="flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-rose-600 transition"
+                      >
                         <MessageCircle className="w-6 h-6" />
-                        <span>{post.commentsCount} ta fikr</span>
+                        <span>{(post.comments || []).length} ta sharh</span>
                       </button>
 
                       <a 
@@ -306,6 +332,88 @@ export default function InstagramFeed({ onOpenAdmin }) {
                       <span>#AyollarAkademiyasi</span>
                       <span>#DirektorOvozli</span>
                     </div>
+                  </div>
+
+                  {/* Instagram-style Comments Section */}
+                  <div className="pt-3 border-t border-slate-100 space-y-3">
+                    {/* View all comments toggle */}
+                    {(post.comments || []).length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllComments(prev => ({ ...prev, [post.id]: !prev[post.id] }))}
+                        className="text-xs font-semibold text-slate-500 hover:text-faberlic-700 transition block text-left"
+                      >
+                        {showAllComments[post.id] 
+                          ? '▲ Sharhlarni yashirish' 
+                          : `💬 Barcha ${(post.comments || []).length} ta sharhni ko'rish...`}
+                      </button>
+                    )}
+
+                    {/* Comments List */}
+                    <div className="space-y-2">
+                      {((post.comments || []).length > 0) ? (
+                        (showAllComments[post.id] 
+                          ? (post.comments || []) 
+                          : (post.comments || []).slice(-2)
+                        ).map(c => (
+                          <div key={c.id} className="flex items-start justify-between gap-2 text-xs">
+                            <div className="space-y-0.5 leading-snug">
+                              <span className="font-bold text-slate-900 mr-1.5">{c.authorName}:</span>
+                              <span className="text-slate-700">{c.text}</span>
+                              <span className="block text-[10px] text-slate-400 font-medium">{c.createdAt}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setCommentLikes(prev => ({ ...prev, [c.id]: !prev[c.id] }))}
+                              className="text-slate-300 hover:text-rose-500 transition pt-0.5 shrink-0"
+                              title="Yoqdi"
+                            >
+                              <Heart className={`w-3.5 h-3.5 ${commentLikes[c.id] ? 'fill-rose-500 text-rose-500' : ''}`} />
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-slate-400 text-xs italic">Hali sharhlar yo'q. Birinchi bo'lib fikr qoldiring! 🌸</p>
+                      )}
+                    </div>
+
+                    {/* Write Comment Form (Instagram style) */}
+                    <form 
+                      onSubmit={(e) => handleAddComment(e, post.id)}
+                      className="pt-2 flex items-center gap-2 border-t border-slate-50"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-rose-500 to-faberlic-600 text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                        {currentUser?.name ? currentUser.name[0].toUpperCase() : 'FL'}
+                      </div>
+
+                      {/* Guest name input if not logged in */}
+                      {(!currentUser || !currentUser.name || currentUser.name.includes('Mehmon')) && (
+                        <input
+                          type="text"
+                          placeholder="Ismingiz..."
+                          value={guestNames[post.id] || ''}
+                          onChange={(e) => setGuestNames(prev => ({ ...prev, [post.id]: e.target.value }))}
+                          className="w-24 sm:w-28 px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-rose-300"
+                        />
+                      )}
+
+                      <input
+                        type="text"
+                        placeholder="Sharh yozing... (masalan: Zo'r maslahat bo'libdi! ❤️)"
+                        value={commentInputs[post.id] || ''}
+                        onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
+                        className="flex-1 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-rose-400 text-xs focus:outline-none transition"
+                      />
+
+                      <button
+                        type="submit"
+                        disabled={!commentInputs[post.id]?.trim()}
+                        className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-faberlic-700 to-rose-600 hover:from-faberlic-800 hover:to-rose-700 disabled:opacity-30 text-white font-bold text-xs flex items-center gap-1 shadow-xs transition shrink-0"
+                      >
+                        <Send className="w-3 h-3" />
+                        <span className="hidden sm:inline">Yuborish</span>
+                      </button>
+                    </form>
                   </div>
 
                 </div>

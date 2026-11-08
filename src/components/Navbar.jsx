@@ -16,9 +16,7 @@ export default function Navbar({
 
   const navItems = [
     { id: 'courses', label: 'Kurslar', icon: BookOpen },
-    { id: 'classroom', label: 'Darslar', icon: Sparkles, badge: 'LMS' },
     { id: 'feed', label: 'Lenta & Ovoz', icon: Sparkles, badge: 'Yangi' },
-    { id: 'calculator', label: 'Kalkulyator', icon: Calculator },
     { id: 'certificate', label: 'Sertifikat', icon: Award, highlight: true },
     { id: 'ranking', label: 'Reyting', icon: Trophy },
     { id: 'products', label: 'Katalog', icon: ShoppingBag },
@@ -34,7 +32,7 @@ export default function Navbar({
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-rose-100 shadow-sm transition-all">
       {/* Top micro announcement */}
       <div className="bg-gradient-to-r from-faberlic-700 via-rose-600 to-pink-600 text-white text-xs py-1.5 px-4 sm:px-6 lg:px-8 shadow-sm">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 mx-auto sm:mx-0">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-bold">100% BEPUL</span>
             <span>🌸 Qizlar va Ayollar uchun Faberlic Biznes va Go'zallik Maktabi</span>
@@ -66,7 +64,7 @@ export default function Navbar({
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-2 sm:gap-4">
           
           {/* Logo */}
@@ -97,7 +95,7 @@ export default function Navbar({
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden xl:flex items-center gap-1 xl:gap-1.5 flex-1 justify-center max-w-2xl 2xl:max-w-3xl">
+          <nav className="hidden lg:flex items-center gap-1 lg:gap-1.5 flex-1 justify-center max-w-xl">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -167,7 +165,7 @@ export default function Navbar({
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden p-2 rounded-xl text-slate-600 hover:bg-rose-50 hover:text-faberlic-700 transition"
+              className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-rose-50 hover:text-faberlic-700 transition"
               aria-label="Menyu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -179,7 +177,7 @@ export default function Navbar({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-white border-b border-rose-100 px-4 py-4 space-y-2 shadow-lg animate-in slide-in-from-top duration-200">
+        <div className="lg:hidden bg-white border-b border-rose-100 px-4 py-4 space-y-2 shadow-lg animate-in slide-in-from-top duration-200">
           {isRealUser ? (
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 text-xs font-bold text-slate-600 px-2">
               <span className="flex items-center gap-1 text-amber-600">

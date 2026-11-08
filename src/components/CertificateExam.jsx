@@ -187,7 +187,7 @@ export default function CertificateExam({ user, certificates, onExamCompleted, o
 
   return (
     <section className="py-16 bg-white border-t border-rose-100 min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-10 space-y-3">
