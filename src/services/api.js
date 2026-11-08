@@ -1,5 +1,6 @@
 import { broadcastEvent, fetchCloudEvents } from '../utils/cloudSync';
 import { getStoredExamQuestions } from '../utils/examStorage';
+import { notifyTelegramRegistration } from '../utils/telegramNotify';
 
 const TOKEN_KEY = 'faberlic_auth_token';
 const USER_KEY = 'faberlic_local_user';
@@ -96,6 +97,7 @@ export const api = {
       broadcastEvent({ type: 'UPDATE_USER', user: updatedUser });
     }
     broadcastEvent({ type: 'REGISTER_USER', user: registeredUser });
+    notifyTelegramRegistration(registeredUser);
 
     // Optional server sync if API is alive
     const apiBase = getApiBase();

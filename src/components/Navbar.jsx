@@ -54,12 +54,12 @@ export default function Navbar({
             <Lock className="w-3 h-3 text-amber-300" /> Admin
           </button>
           <a 
-            href="https://t.me" 
+            href="https://t.me/Faberlicuz_bot" 
             target="_blank" 
             rel="noreferrer"
-            className="flex items-center gap-1 text-[11px] hover:text-amber-200 transition"
+            className="flex items-center gap-1 text-[11px] hover:text-amber-200 transition font-bold"
           >
-            <Send className="w-3 h-3" /> Telegram Qizlar Klubi
+            <Send className="w-3 h-3 text-cyan-300" /> Savol berish (@Faberlicuz_bot)
           </a>
         </div>
       </div>
@@ -227,6 +227,19 @@ export default function Navbar({
           })}
 
           <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
+            <a 
+              href="https://t.me/Faberlicuz_bot"
+              target="_blank"
+              rel="noreferrer"
+              className="w-full flex items-center justify-between px-3 py-2 text-xs font-bold text-sky-800 bg-sky-50 rounded-xl"
+            >
+              <div className="flex items-center gap-2">
+                <Send className="w-4 h-4 text-sky-600" />
+                <span>Savol Berish (Telegram Bot)</span>
+              </div>
+              <span className="text-[10px] bg-sky-200 text-sky-900 px-2 py-0.5 rounded font-mono font-bold">@Faberlicuz_bot</span>
+            </a>
+
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
