@@ -8,22 +8,25 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23cf102d'/><text x='50' y='64' font-size='42' font-family='serif' font-weight='bold' fill='white' text-anchor='middle'>FL</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <title>Faberlic Ayollar & Qizlar Akademiyasi | Bepul Biznes va Go'zallik Maktabi</title>
+
+    <!-- PWA & Mobile App Support (Android & iOS) -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#cf102d" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Faberlic" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     
-    <!-- Kill any rogue service workers from other apps (like qarz/savdogar daftari) -->
+    <!-- Service Worker Registration for PWA -->
     <script>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for (var reg of registrations) {
-            reg.unregister();
-            console.log('Unregistered rogue service worker:', reg);
-          }
-        });
-      }
-      if ('caches' in window) {
-        caches.keys().then(function(names) {
-          for (var name of names) {
-            caches.delete(name);
-          }
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js').then(function(reg) {
+            console.log('Faberlic PWA Service Worker registered:', reg.scope);
+          }).catch(function(err) {
+            console.warn('SW registration failed:', err);
+          });
         });
       }
     </script>

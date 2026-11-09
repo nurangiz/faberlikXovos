@@ -7,6 +7,7 @@ import CertificateExam from './components/CertificateExam';
 import Leaderboard from './components/Leaderboard';
 import ProductsGuide from './components/ProductsGuide';
 import InstagramFeed from './components/InstagramFeed';
+import InstallAppModal from './components/InstallAppModal';
 import { subscribeToCloudEvents } from './utils/cloudSync';
 import UserModal from './components/UserModal';
 import VerifyModal from './components/VerifyModal';
@@ -30,6 +31,14 @@ export default function App() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isVerifyOpen, setIsVerifyOpen] = useState(false);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const [showInstallBanner, setShowInstallBanner] = useState(() => {
+    try {
+      return localStorage.getItem('fl_dismiss_install_banner') !== '1';
+    } catch(e) {
+      return true;
+    }
+  });
   const [isAdminCodeModalOpen, setIsAdminCodeModalOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
@@ -172,6 +181,7 @@ export default function App() {
           setIsVerifyOpen(true);
         }}
         onOpenAdmin={handleOpenAdmin}
+        onOpenInstall={() => setIsInstallModalOpen(true)}
       />
 
       {/* Main Body */}
@@ -292,6 +302,12 @@ export default function App() {
         onLogoutAdmin={handleLogoutAdmin}
       />
 
+      {/* Install Mobile App (PWA) Modal */}
+      <InstallAppModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
+      />
+
       {/* Global Footer */}
       <Footer 
         onNavClick={(tab) => {
@@ -299,7 +315,45 @@ export default function App() {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }} 
         onOpenAdmin={handleOpenAdmin}
+        onOpenInstall={() => setIsInstallModalOpen(true)}
       />
+
+      {/* Floating Mobile Install App Banner */}
+      {showInstallBanner && (
+        <aside 
+          aria-label="Ilovani o'rnatish taklifi"
+          className="fixed bottom-4 left-4 right-4 z-30 max-w-md mx-auto bg-slate-900/95 backdrop-blur-md text-white p-3 sm:p-3.5 rounded-2xl shadow-2xl border border-rose-500/30 flex items-center justify-between gap-3 animate-in slide-in-from-bottom duration-300"
+        >
+          <div className="flex items-center gap-2.5 overflow-hidden">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-faberlic-600 to-rose-600 flex items-center justify-center font-serif font-black text-white shrink-0 text-sm shadow-md">
+              FL
+            </div>
+            <div className="truncate">
+              <h4 className="text-xs font-bold leading-tight">Faberlic Mobil Ilovasi</h4>
+              <p className="text-[10px] text-rose-300 truncate">Android & iOS uchun bepul o'rnatish</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => setIsInstallModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-faberlic-600 to-rose-600 text-white text-xs font-bold shadow-md hover:brightness-110 active:scale-95 transition"
+            >
+              O'rnatish
+            </button>
+            <button
+              onClick={() => {
+                try { localStorage.setItem('fl_dismiss_install_banner', '1'); } catch(e) {}
+                setShowInstallBanner(false);
+              }}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition"
+              aria-label="Yopish"
+            >
+              <span className="text-base leading-none">×</span>
+            </button>
+          </div>
+        </aside>
+      )}
 
     </div>
   );

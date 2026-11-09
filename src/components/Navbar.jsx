@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, BookOpen, Award, Calculator, Trophy, ShoppingBag, User, Menu, X, Flame, Send, LogIn, ShieldCheck, Lock } from 'lucide-react';
+import { Sparkles, BookOpen, Award, Trophy, ShoppingBag, User, Menu, X, Flame, Send, LogIn, ShieldCheck, Lock, Smartphone } from 'lucide-react';
 
 export default function Navbar({ 
   activeTab, 
@@ -8,7 +8,8 @@ export default function Navbar({
   onOpenProfile, 
   onOpenAuth,
   onOpenVerify,
-  onOpenAdmin
+  onOpenAdmin,
+  onOpenInstall
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -39,6 +40,14 @@ export default function Navbar({
           </div>
 
           <div className="hidden sm:flex items-center gap-4">
+            <button 
+              onClick={onOpenInstall}
+              className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 hover:text-white transition bg-white/10 hover:bg-white/20 px-2.5 py-0.5 rounded-full shadow-xs"
+              title="Ilovani telefoningizga o'rnating"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-emerald-300" />
+              <span>Ilovani O'rnatish</span>
+            </button>
             <button 
               onClick={onOpenVerify}
               className="flex items-center gap-1 text-[11px] font-bold text-amber-200 hover:text-white transition"
@@ -227,6 +236,20 @@ export default function Navbar({
           })}
 
           <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenInstall();
+              }}
+              className="w-full flex items-center justify-between px-3 py-2.5 text-xs font-bold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition"
+            >
+              <div className="flex items-center gap-2">
+                <Smartphone className="w-4 h-4 text-emerald-600" />
+                <span>Mobil Ilovani O'rnatish</span>
+              </div>
+              <span className="text-[10px] bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded font-bold">Android & iOS</span>
+            </button>
+
             <a 
               href="https://t.me/Faberlicuz_bot"
               target="_blank"

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Heart, Send, Sparkles, BookOpen, Award, Phone, Lock } from 'lucide-react';
+import { Heart, Send, Sparkles, BookOpen, Award, Phone, Lock, Smartphone } from 'lucide-react';
 
-export default function Footer({ onNavClick, onOpenAdmin }) {
+export default function Footer({ onNavClick, onOpenAdmin, onOpenInstall }) {
   return (
     <footer className="bg-slate-950 text-white border-t border-rose-950/60 pt-16 pb-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -78,6 +78,15 @@ export default function Footer({ onNavClick, onOpenAdmin }) {
               <li>
                 <button onClick={() => onNavClick('feed')} className="hover:text-white transition">
                   • Direktor Ovozli Lenta & Xabarlar
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={onOpenInstall} 
+                  className="text-emerald-300 hover:text-white transition font-bold flex items-center gap-1.5"
+                >
+                  <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>• Mobil Ilovani O'rnatish (Android & iOS)</span>
                 </button>
               </li>
               <li>
